@@ -1,7 +1,16 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import { validateTrip, type TripRequest, type TripValidation } from "@/lib/api";
+import { useRef, useState, type FormEvent } from "react";
+import Link from "next/link";
+import { useAuth } from "@/components/auth-provider";
+import {
+  createTrip,
+  updateTrip,
+  validateTrip,
+  type SavedTrip,
+  type TripRequest,
+  type TripValidation,
+} from "@/lib/api";
 
 const tasteOptions = [
   "Cafe",
@@ -16,23 +25,77 @@ const money = new Intl.NumberFormat("vi-VN", {
   currency: "VND",
 });
 
-export function TripForm() {
-  const [group, setGroup] = useState<"couple" | "friends">("couple");
-  const [preferences, setPreferences] = useState([
-    "Cafe",
-    "Chụp ảnh",
-    "Đồ ăn local",
-  ]);
-  const [exclusions, setExclusions] = useState(["Trekking"]);
+function localDate(value?: string) {
+  if (!value) return "";
+  return new Date(new Date(value).getTime() + 7 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 16);
+}
+
+export function TripForm({
+  initial,
+  onSaved,
+}: {
+  initial?: SavedTrip;
+  onSaved?: (trip: SavedTrip) => void;
+}) {
+  const { session, loading, configured } = useAuth();
+  const [group, setGroup] = useState<"couple" | "friends">(
+    initial?.trip.group_type ?? "couple",
+  );
+  const [preferences, setPreferences] = useState(
+    initial?.trip.preferences ?? ["Cafe", "Chụp ảnh", "Đồ ăn local"],
+  );
+  const [exclusions, setExclusions] = useState(
+    initial?.trip.exclusions ?? ["Trekking"],
+  );
   const [result, setResult] = useState<TripValidation | null>(null);
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
+  const [title, setTitle] = useState(initial?.title ?? "Chuyến đi Đà Lạt");
+  const [saved, setSaved] = useState<SavedTrip | null>(null);
+  const requestKey = useRef<{ signature: string; id: string } | null>(null);
+
+  async function save() {
+    if (!result || !session || pending) return;
+    setPending(true);
+    setError("");
+    const signature = JSON.stringify({
+      title,
+      trip: result.trip,
+      user: session.user.id,
+    });
+    if (requestKey.current?.signature !== signature)
+      requestKey.current = { signature, id: crypto.randomUUID() };
+    try {
+      const response = initial
+        ? await updateTrip(initial.id, {
+            title,
+            trip: result.trip,
+            expected_revision: saved?.revision ?? initial.revision,
+          })
+        : await createTrip({
+            title,
+            trip: result.trip,
+            request_id: requestKey.current.id,
+          });
+      setSaved(response);
+      onSaved?.(response);
+    } catch (caught) {
+      setError(
+        caught instanceof Error ? caught.message : "Chưa lưu được chuyến đi.",
+      );
+    } finally {
+      setPending(false);
+    }
+  }
 
   function toggle(
     value: string,
     values: string[],
     update: (next: string[]) => void,
   ) {
+    if (!initial) setSaved(null);
     update(
       values.includes(value)
         ? values.filter((item) => item !== value)
@@ -63,8 +126,8 @@ export function TripForm() {
       pace: form.get("pace") as TripRequest["pace"],
       preferences,
       exclusions,
-      fixed_events: [],
-      anchor: null,
+      fixed_events: initial?.trip.fixed_events ?? [],
+      anchor: initial?.trip.anchor ?? null,
     };
     setPending(true);
     setResult(null);
@@ -87,7 +150,9 @@ export function TripForm() {
       <div className="section-heading">
         <span className="step">01</span>
         <div>
-          <h2 id="trip-heading">Phác thảo chuyến đi</h2>
+          <h2 id="trip-heading">
+            {initial ? "Chỉnh sửa chuyến đi" : "Phác thảo chuyến đi"}
+          </h2>
           <p>Đà Lạt · 2–4 ngày · Couple hoặc nhóm bạn</p>
         </div>
       </div>
@@ -96,16 +161,27 @@ export function TripForm() {
         onChange={() => {
           setResult(null);
           setError("");
+          if (!initial) setSaved(null);
         }}
       >
         <fieldset disabled={pending} className="form-fields">
           <legend className="sr-only">Thông tin chuyến đi</legend>
+          <label>
+            Tên chuyến đi
+            <input
+              name="title"
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              required
+              maxLength={120}
+            />
+          </label>
           <div className="field-row">
             <label>
               Xuất phát từ
               <input
                 name="origin"
-                defaultValue="TP.HCM"
+                defaultValue={initial?.trip.origin ?? "TP.HCM"}
                 required
                 maxLength={120}
                 autoComplete="off"
@@ -121,6 +197,7 @@ export function TripForm() {
               Đến Đà Lạt lúc
               <input
                 name="arrival"
+                defaultValue={localDate(initial?.trip.arrival_at)}
                 type="datetime-local"
                 required
                 aria-describedby="date-help"
@@ -130,6 +207,7 @@ export function TripForm() {
               Rời Đà Lạt lúc
               <input
                 name="departure"
+                defaultValue={localDate(initial?.trip.departure_at)}
                 type="datetime-local"
                 required
                 aria-describedby="date-help"
@@ -161,7 +239,7 @@ export function TripForm() {
                 <input
                   name="people"
                   type="number"
-                  defaultValue="3"
+                  defaultValue={initial?.trip.people_count ?? 3}
                   min="1"
                   max="4"
                   step="1"
@@ -176,7 +254,7 @@ export function TripForm() {
               <input
                 name="budget"
                 type="number"
-                defaultValue="4000000"
+                defaultValue={initial?.trip.budget.amount_vnd ?? 4000000}
                 min="1"
                 max="1000000000"
                 step="1"
@@ -185,7 +263,10 @@ export function TripForm() {
             </label>
             <label>
               Cách tính
-              <select name="scope" defaultValue="per_person">
+              <select
+                name="scope"
+                defaultValue={initial?.trip.budget.scope ?? "per_person"}
+              >
                 <option value="per_person">Mỗi người / toàn chuyến</option>
                 <option value="group">Cả nhóm / toàn chuyến</option>
               </select>
@@ -195,13 +276,20 @@ export function TripForm() {
             Dự kiến gồm đi lại, lưu trú, ăn uống, trải nghiệm và dự phòng.
           </p>
           <label className="checkbox">
-            <input type="checkbox" name="hard_budget" />
+            <input
+              type="checkbox"
+              name="hard_budget"
+              defaultChecked={initial?.trip.budget.mode === "hard"}
+            />
             Không vượt ngân sách dự toán
           </label>
           <div className="field-row">
             <label>
               Nhịp đi
-              <select name="pace" defaultValue="relaxed">
+              <select
+                name="pace"
+                defaultValue={initial?.trip.pace ?? "relaxed"}
+              >
                 <option value="relaxed">Thảnh thơi</option>
                 <option value="balanced">Cân bằng</option>
                 <option value="active">Nhiều trải nghiệm</option>
@@ -258,7 +346,7 @@ export function TripForm() {
           </button>
         </fieldset>
         <p className="field-help">
-          Thông tin chỉ dùng để kiểm tra, chưa được lưu.
+          Kiểm tra thông tin trước khi lưu. Lịch trình AI chưa được tạo.
         </p>
         {error && (
           <div className="message error" role="alert">
@@ -277,7 +365,38 @@ export function TripForm() {
                 <li key={notice.code}>{notice.message}</li>
               ))}
             </ul>
+            {session && !saved && (
+              <button
+                className="primary"
+                type="button"
+                disabled={pending}
+                onClick={save}
+              >
+                {pending
+                  ? "Đang lưu…"
+                  : initial
+                    ? "Lưu thay đổi"
+                    : "Lưu chuyến đi"}
+              </button>
+            )}
+            {!session && !loading && configured && (
+              <p>
+                <Link href="/login" target="_blank" rel="noopener noreferrer">
+                  Đăng nhập ở tab mới để lưu chuyến đi
+                </Link>
+                . Giữ tab này để không mất thông tin.
+              </p>
+            )}
+            {!configured && !loading && (
+              <p>Tính năng lưu vào tài khoản chưa được mở ở bản này.</p>
+            )}
           </div>
+        )}
+        {saved && (
+          <p className="message success" role="status">
+            Đã lưu chuyến đi.{" "}
+            <Link href={`/trips/${saved.id}`}>Mở bản đã lưu →</Link>
+          </p>
         )}
       </form>
     </section>

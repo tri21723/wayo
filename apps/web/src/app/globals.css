@@ -321,3 +321,155 @@ footer {
     font-size: 10px;
   }
 }
+
+.account-nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 13px;
+}
+.account-nav a,
+.back-link a,
+.trip-grid a {
+  color: var(--green);
+}
+.account-nav button,
+.text-button {
+  background: none;
+  border: none;
+  color: var(--green);
+  text-decoration: underline;
+  padding: 8px 0;
+}
+.narrow-page {
+  max-width: 800px;
+  padding-top: 20px;
+  padding-bottom: 40px;
+}
+.narrow-page > .form-card {
+  margin-top: 24px;
+}
+.page-title {
+  font-size: 32px;
+  letter-spacing: -1px;
+}
+.auth-fields {
+  display: grid;
+  gap: 18px;
+}
+.trip-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  padding-bottom: 40px;
+}
+.trip-grid h2 {
+  overflow-wrap: anywhere;
+}
+.pagination {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  margin: 24px 0;
+}
+.pagination button,
+.delete-panel button {
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+}
+.delete-panel {
+  margin-top: 30px;
+  padding: 20px 0;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+}
+.delete-panel button {
+  margin-right: 12px;
+}
+.danger-button {
+  color: #913920;
+}
+.back-link {
+  margin-top: 24px;
+}
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+@media (max-width: 600px) {
+  .trip-grid {
+    grid-template-columns: 1fr;
+  }
+  .account-nav {
+    gap: 10px;
+    font-size: 12px;
+  }
+}
+
+.taste-form {
+  display: grid;
+  gap: 1.5rem;
+  max-width: 760px;
+  margin: 0 auto 4rem;
+}
+.taste-form fieldset {
+  border: 1px solid #d6dfd5;
+  border-radius: 12px;
+  padding: 1rem;
+}
+.taste-form legend {
+  padding: 0 0.4rem;
+  font-weight: 600;
+}
+.taste-form > label {
+  display: grid;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+.taste-form select {
+  width: 100%;
+  padding: 0.8rem;
+  border: 1px solid #d6dfd5;
+  border-radius: 8px;
+  background: white;
+  color: #203b2b;
+}
+.taste-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.taste-options label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.taste-options input {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.discovery {
+  margin-top: 2rem;
+}
+.discovery .trip-grid {
+  margin-top: 1.5rem;
+}
+.place-card {
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.place-card h3 {
+  margin-top: 0;
+}
+.place-warnings {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.place-card details {
+  overflow-wrap: anywhere;
+}

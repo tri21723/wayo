@@ -1,5 +1,6 @@
 import { TripForm } from "@/components/trip-form";
 import Link from "next/link";
+import { AccountNav } from "@/components/account-nav";
 
 export default function Home() {
   return (
@@ -8,7 +9,7 @@ export default function Home() {
         <Link className="wordmark" href="/" aria-label="Wayo — Trang chủ">
           wayo<span>↗</span>
         </Link>
-        <span className="pill">Đà Lạt · Bản phát triển</span>
+        <AccountNav />
       </header>
       <section className="intro">
         <p className="eyebrow">TRAVEL YOUR WAY</p>
@@ -53,8 +54,8 @@ export default function Home() {
             </li>
           </ol>
           <p className="development-note">
-            Bản hiện tại chỉ kiểm tra thông tin đầu vào. Chuyến đi chưa được lưu
-            và chưa có lịch trình AI.
+            Kiểm tra thông tin và lưu bản nháp vào tài khoản của bạn. Lịch trình
+            AI đang được phát triển.
           </p>
         </aside>
       </div>

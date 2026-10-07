@@ -1,5 +1,7 @@
+from datetime import datetime
 from enum import StrEnum
 from typing import Annotated, Literal, Self
+from uuid import UUID
 from zoneinfo import ZoneInfo
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StringConstraints, model_validator
@@ -114,3 +116,31 @@ class Health(Contract):
     status: Literal["ok"] = "ok"
     service: Literal["wayo-api"] = "wayo-api"
     version: Literal["0.1.0"] = "0.1.0"
+
+
+class TripCreate(Contract):
+    request_id: UUID
+    title: Text
+    trip: TripRequest
+
+
+class TripUpdate(Contract):
+    expected_revision: int = Field(ge=1, strict=True)
+    title: Text
+    trip: TripRequest
+
+
+class SavedTrip(Contract):
+    id: UUID
+    title: str
+    trip: TripRequest
+    revision: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class TripList(Contract):
+    items: list[SavedTrip]
+    total: int
+    offset: int
+    limit: int

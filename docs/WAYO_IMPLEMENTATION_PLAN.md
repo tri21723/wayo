@@ -1,6 +1,6 @@
 # Wayo — Kế hoạch triển khai và checklist MVP
 
-Ngày lập: 07/10/2026. Trạng thái: đang triển khai sprint đầu. Xem [tiến độ và bằng chứng](SPRINT_01_STATUS.md).
+Ngày lập: 07/10/2026. Trạng thái: đang triển khai sprint đầu; auth và Trip CRUD đã có code, chờ cấu hình dịch vụ thật/staging. Xem [tiến độ và bằng chứng](SPRINT_01_STATUS.md).
 
 Nguồn: [Wayo Product & Technical Blueprint](../Wayo_Product_Technical_Blueprint.md), mục 1–77. Tài liệu này chuyển định hướng trong blueprint thành công việc có thể theo dõi; các lựa chọn bổ sung bên dưới là đề xuất, chưa phải quyết định đã được chủ dự án xác nhận. Không coi các ví dụ địa điểm, giá, điểm match hoặc free tier trong blueprint là dữ liệu đã xác minh.
 
@@ -194,10 +194,12 @@ Nghiệm thu: mọi POI được planner chọn có ID tồn tại, tọa độ 
 
 ### E04 — Taste profile và trip setup · W3 · FE + BE
 
+Cập nhật 2026-10-07: đã có `/profile`, GET/PUT private, sáu nhóm câu hỏi và vector version 1. TASTE-01/03 còn wizard và trip snapshot/override; ranking chưa dùng profile. Xem `docs/decisions/0003-explicit-taste-profile.md`.
+
 Phụ thuộc: BASE-05, DB-01, PROD-03.
 
 - [ ] **TASTE-01 · P0** Onboarding 6–10 tương tác, progress/back/skip; hoàn thành rồi sửa lại được, không ép điền mọi sở thích.
-- [ ] **TASTE-02 · P0** Mapping câu trả lời → taste vector có bounds/defaults và schema version; loại trừ trekking/dietary/accessibility tách khỏi điểm sở thích mềm.
+- [x] **TASTE-02 · P0** Mapping câu trả lời → taste vector có bounds/defaults và schema version; loại trừ trekking/dietary/accessibility tách khỏi điểm sở thích mềm.
 - [ ] **TASTE-03 · P0** Profile API/UI; trip có snapshot và override để sửa trip không vô tình sửa profile gốc.
 - [ ] **TASTE-04 · P0** Trip setup validate ngày giờ, số người, budget scope, mode, anchor, fixed events và thời gian nghỉ; form tiếng Việt rõ đơn vị.
 - [ ] **TASTE-05 · P1** Kiểm tra onboarding với người dùng thử; ghi completion/time/drop-off và điều chỉnh câu hỏi gây nhầm.
@@ -205,6 +207,8 @@ Phụ thuộc: BASE-05, DB-01, PROD-03.
 Nghiệm thu: cùng input tạo vector nhất quán; exclusion không bị ranker biến thành sở thích thấp; trip đủ dữ kiện để planner chạy hoặc hỏi đúng phần còn thiếu.
 
 ### E05 — Retrieval và ranking · W3–W4 · BE + DATA
+
+Cập nhật 2026-10-07: có catalog/importer, lọc verified/fresh/exclusions, tag ranking deterministic và UI discovery. Chưa có POI thật, profile snapshot, group/distance/time/season scoring hoặc planner. Xem ADR 0004; các task dưới đây chưa đủ acceptance toàn bộ.
 
 Phụ thuộc: DATA-03, TASTE-02, TASTE-04.
 

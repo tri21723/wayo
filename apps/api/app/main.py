@@ -1,14 +1,41 @@
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import SQLAlchemyError
+from starlette.exceptions import HTTPException
 
+from app.profiles import router as profiles_router
+from app.recommendations import router as recommendations_router
 from app.schemas import ApiError, ErrorDetail, Health, InputNotice, TripRequest, TripValidation
+from app.trips import router as trips_router
 
 app = FastAPI(
     title="Wayo API",
     version="0.1.0",
-    description="Foundation contracts. Input validation only; no trip persistence or planning yet.",
+    description="Trip validation and owner-scoped draft storage. No itinerary generation yet.",
 )
+
+
+@app.exception_handler(HTTPException)
+async def http_error(_request: Request, exc: HTTPException) -> JSONResponse:
+    body = (
+        exc.detail
+        if isinstance(exc.detail, dict)
+        else {"code": "HTTP_ERROR", "message": str(exc.detail), "details": []}
+    )
+    return JSONResponse(status_code=exc.status_code, content=body, headers=exc.headers)
+
+
+@app.exception_handler(SQLAlchemyError)
+async def database_error(_request: Request, _exc: SQLAlchemyError) -> JSONResponse:
+    return JSONResponse(
+        status_code=503,
+        content={
+            "code": "DATABASE_UNAVAILABLE",
+            "message": "Chưa truy cập được dữ liệu.",
+            "details": [],
+        },
+    )
 
 
 @app.exception_handler(RequestValidationError)
@@ -16,7 +43,7 @@ async def invalid_request(_request: Request, exc: RequestValidationError) -> JSO
     # Do not reflect user input or Pydantic exception context in public errors.
     error = ApiError(
         code="VALIDATION_ERROR",
-        message="Thông tin chuyến đi chưa hợp lệ.",
+        message="Thông tin gửi lên chưa hợp lệ.",
         details=[
             ErrorDetail(
                 field=".".join(str(part) for part in issue["loc"] if part != "body"),
@@ -71,3 +98,9 @@ def validate_trip(trip: TripRequest) -> TripValidation:
         notices=notices,
         trip=trip,
     )
+
+
+# Keep /validate before the UUID route so public validation remains unambiguous.
+app.include_router(trips_router)
+app.include_router(profiles_router)
+app.include_router(recommendations_router)
