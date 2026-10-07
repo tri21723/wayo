@@ -1,0 +1,413 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Wayo API",
+    "description": "Foundation contracts. Input validation only; no trip persistence or planning yet.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health",
+        "description": "Liveness only. This does not assert database/provider readiness.",
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/trips/validate": {
+      "post": {
+        "summary": "Validate Trip",
+        "description": "Validate a draft without saving it or asserting itinerary feasibility.",
+        "operationId": "validateTrip",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TripRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TripValidation"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Anchor": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Label"
+          },
+          "latitude": {
+            "type": "number",
+            "maximum": 90.0,
+            "minimum": -90.0,
+            "title": "Latitude"
+          },
+          "longitude": {
+            "type": "number",
+            "maximum": 180.0,
+            "minimum": -180.0,
+            "title": "Longitude"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "label",
+          "latitude",
+          "longitude"
+        ],
+        "title": "Anchor"
+      },
+      "ApiError": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "details": {
+            "items": {
+              "$ref": "#/components/schemas/ErrorDetail"
+            },
+            "type": "array",
+            "title": "Details"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ApiError"
+      },
+      "Budget": {
+        "properties": {
+          "amount_vnd": {
+            "type": "integer",
+            "maximum": 1000000000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Amount Vnd"
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "per_person",
+              "group"
+            ],
+            "title": "Scope",
+            "default": "per_person"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "soft",
+              "hard"
+            ],
+            "title": "Mode",
+            "default": "soft"
+          },
+          "currency": {
+            "type": "string",
+            "const": "VND",
+            "title": "Currency",
+            "default": "VND"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "amount_vnd"
+        ],
+        "title": "Budget"
+      },
+      "ErrorDetail": {
+        "properties": {
+          "field": {
+            "type": "string",
+            "title": "Field"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "field",
+          "message"
+        ],
+        "title": "ErrorDetail"
+      },
+      "FixedEvent": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Label"
+          },
+          "starts_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Starts At"
+          },
+          "ends_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Ends At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "label",
+          "starts_at",
+          "ends_at"
+        ],
+        "title": "FixedEvent"
+      },
+      "Health": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok",
+            "title": "Status",
+            "default": "ok"
+          },
+          "service": {
+            "type": "string",
+            "const": "wayo-api",
+            "title": "Service",
+            "default": "wayo-api"
+          },
+          "version": {
+            "type": "string",
+            "const": "0.1.0",
+            "title": "Version",
+            "default": "0.1.0"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "Health"
+      },
+      "InputNotice": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "InputNotice"
+      },
+      "Pace": {
+        "type": "string",
+        "enum": [
+          "relaxed",
+          "balanced",
+          "active"
+        ],
+        "title": "Pace"
+      },
+      "TripRequest": {
+        "properties": {
+          "destination_id": {
+            "type": "string",
+            "const": "da-lat",
+            "title": "Destination Id",
+            "default": "da-lat"
+          },
+          "origin": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Origin"
+          },
+          "arrival_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Arrival At"
+          },
+          "departure_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Departure At"
+          },
+          "timezone": {
+            "type": "string",
+            "const": "Asia/Ho_Chi_Minh",
+            "title": "Timezone",
+            "default": "Asia/Ho_Chi_Minh"
+          },
+          "people_count": {
+            "type": "integer",
+            "maximum": 4.0,
+            "minimum": 1.0,
+            "title": "People Count"
+          },
+          "group_type": {
+            "type": "string",
+            "enum": [
+              "couple",
+              "friends"
+            ],
+            "title": "Group Type"
+          },
+          "budget": {
+            "$ref": "#/components/schemas/Budget"
+          },
+          "transport_mode": {
+            "type": "string",
+            "const": "driving",
+            "title": "Transport Mode",
+            "default": "driving"
+          },
+          "pace": {
+            "$ref": "#/components/schemas/Pace",
+            "default": "relaxed"
+          },
+          "anchor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Anchor"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "preferences": {
+            "items": {
+              "type": "string",
+              "maxLength": 120,
+              "minLength": 1
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Preferences"
+          },
+          "exclusions": {
+            "items": {
+              "type": "string",
+              "maxLength": 120,
+              "minLength": 1
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Exclusions"
+          },
+          "fixed_events": {
+            "items": {
+              "$ref": "#/components/schemas/FixedEvent"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Fixed Events"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "origin",
+          "arrival_at",
+          "departure_at",
+          "people_count",
+          "group_type",
+          "budget"
+        ],
+        "title": "TripRequest"
+      },
+      "TripValidation": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "input_valid",
+            "title": "Status",
+            "default": "input_valid"
+          },
+          "trip_days": {
+            "type": "integer",
+            "title": "Trip Days"
+          },
+          "total_budget_vnd": {
+            "type": "integer",
+            "title": "Total Budget Vnd"
+          },
+          "notices": {
+            "items": {
+              "$ref": "#/components/schemas/InputNotice"
+            },
+            "type": "array",
+            "title": "Notices"
+          },
+          "trip": {
+            "$ref": "#/components/schemas/TripRequest"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "trip_days",
+          "total_budget_vnd",
+          "notices",
+          "trip"
+        ],
+        "title": "TripValidation"
+      }
+    }
+  }
+}

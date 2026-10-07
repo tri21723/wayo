@@ -1,0 +1,31 @@
+{
+  "name": "wayo",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/web"
+  ],
+  "engines": {
+    "node": ">=22 <23"
+  },
+  "scripts": {
+    "dev": "npm run dev --workspace @wayo/web --",
+    "build": "npm run build --workspace @wayo/web",
+    "start": "npm run start --workspace @wayo/web --",
+    "typecheck": "npm run typecheck --workspace @wayo/web",
+    "lint": "npm run lint --workspace @wayo/web",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "api:types": "openapi-typescript apps/api/openapi.json -o apps/web/src/lib/api-schema.d.ts"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.4.0",
+    "openapi-typescript": "7.13.0",
+    "prettier": "3.9.9",
+    "typescript": "5.9.3"
+  }
+}

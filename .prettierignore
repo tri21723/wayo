@@ -1,0 +1,9 @@
+node_modules
+.next
+.venv
+package-lock.json
+apps/api/openapi.json
+apps/web/src/lib/api-schema.d.ts
+apps/web/next-env.d.ts
+Wayo_Product_Technical_Blueprint.md
+docs/WAYO_IMPLEMENTATION_PLAN.md
