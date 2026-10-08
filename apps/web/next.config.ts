@@ -1,5 +1,8 @@
 import path from "node:path";
 import type { NextConfig } from "next";
+import { assertPublicSupabaseKey } from "./src/lib/public-key.mjs";
+
+assertPublicSupabaseKey(process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
 
 const config: NextConfig = {
   output: "standalone",

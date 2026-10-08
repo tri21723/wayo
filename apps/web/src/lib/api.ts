@@ -23,6 +23,7 @@ async function request<T>(
   path: string,
   options: RequestInit = {},
   authenticated = true,
+  expectedOwner?: string,
 ): Promise<T> {
   const headers = new Headers(options.headers);
   if (options.body) headers.set("Content-Type", "application/json");
@@ -32,6 +33,12 @@ async function request<T>(
       throw new RequestError(
         "UNAUTHENTICATED",
         "Vui lòng đăng nhập để tiếp tục.",
+        401,
+      );
+    if (expectedOwner && result.data.session.user.id !== expectedOwner)
+      throw new RequestError(
+        "SESSION_CHANGED",
+        "Tài khoản đã thay đổi. Vui lòng kiểm tra lại chuyến đi.",
         401,
       );
     headers.set("Authorization", `Bearer ${result.data.session.access_token}`);
@@ -62,20 +69,34 @@ export const validateTrip = (trip: TripRequest) =>
     { method: "POST", body: JSON.stringify(trip) },
     false,
   );
-export const createTrip = (payload: TripCreate) =>
-  request<SavedTrip>("/api/trips", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
+export const createTrip = (payload: TripCreate, expectedOwner?: string) =>
+  request<SavedTrip>(
+    "/api/trips",
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+    true,
+    expectedOwner,
+  );
 export const listTrips = (offset = 0) =>
   request<TripList>(`/api/trips?offset=${offset}&limit=20`);
 export const getTrip = (id: string) =>
   request<SavedTrip>(`/api/trips/${encodeURIComponent(id)}`);
-export const updateTrip = (id: string, payload: TripUpdate) =>
-  request<SavedTrip>(`/api/trips/${encodeURIComponent(id)}`, {
-    method: "PUT",
-    body: JSON.stringify(payload),
-  });
+export const updateTrip = (
+  id: string,
+  payload: TripUpdate,
+  expectedOwner?: string,
+) =>
+  request<SavedTrip>(
+    `/api/trips/${encodeURIComponent(id)}`,
+    {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    },
+    true,
+    expectedOwner,
+  );
 export const deleteTrip = (id: string, revision: number) =>
   request<void>(
     `/api/trips/${encodeURIComponent(id)}?expected_revision=${revision}`,

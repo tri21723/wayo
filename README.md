@@ -8,6 +8,8 @@ Next.js + FastAPI có form trip, Supabase Auth, lưu/sửa sở thích tại `/p
 
 - [Kế hoạch và checklist](docs/WAYO_IMPLEMENTATION_PLAN.md)
 - [Checklist nghiệm thu foundation local](docs/FOUNDATION_CHECKLIST.md)
+- [Review foundation và các lỗi đã sửa](docs/FOUNDATION_REVIEW.md)
+- [Plan tiếp theo: M1 Data & taste → M2](docs/NEXT_PHASE_PLAN.md)
 - [Chuẩn bị deployment](docs/runbooks/DEPLOYMENT.md)
 - [Provider contract spikes](docs/runbooks/PROVIDER_SPIKES.md)
 - [Tiến độ sprint 1](docs/SPRINT_01_STATUS.md)
@@ -57,6 +59,7 @@ Web gọi same-origin `/api/trips/validate`; Next.js chuyển tiếp tới FastA
 .venv/bin/ruff check apps/api scripts
 .venv/bin/ruff format --check apps/api scripts
 .venv/bin/pytest apps/api/tests
+npm run test:web
 npm run lint
 npm run typecheck
 npm run format:check
@@ -101,6 +104,6 @@ docs/            Product spec, decisions, wireframes, progress
 
 ## Phạm vi tiếp theo
 
-Foundation local có auth/owner/admin, trip CRUD, readiness/logs, adapter nền và artifact deployment. Supabase thật đã kết nối; tiếp theo xác minh Docker/CI, triển khai staging khi được yêu cầu, rồi curate POI, schema versions, planner và provider qualification. Xem checklist để tránh coi input validation là itinerary generation.
+Foundation local có auth/owner/admin, trip CRUD, readiness/logs, adapter nền và artifact deployment. Supabase thật đã kết nối và Docker smoke đã qua. Sau review foundation, ưu tiên dictionary/schema catalog, admin/audit, 30–50 POI có nguồn, wizard và ranking; xem plan M1 phía trên. CI trên GitHub còn cần xác minh; staging triển khai khi được yêu cầu. Xem checklist để tránh coi input validation là itinerary generation.
 
 Tài liệu framework tham chiếu: [Next.js installation](https://nextjs.org/docs/app/getting-started/installation), [FastAPI first steps](https://fastapi.tiangolo.com/tutorial/first-steps/).

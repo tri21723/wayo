@@ -58,10 +58,14 @@ export async function proxyApi(
       cache: "no-store",
       redirect: "error",
     });
+    const responseHeaders = new Headers({ "Cache-Control": "no-store" });
+    const requestId = response.headers.get("X-Request-ID");
+    if (requestId && /^[0-9a-f-]{36}$/.test(requestId))
+      responseHeaders.set("X-Request-ID", requestId);
     if (response.status === 204)
       return new Response(null, {
         status: 204,
-        headers: { "Cache-Control": "no-store" },
+        headers: responseHeaders,
       });
     if (
       ![200, 201, 400, 401, 403, 404, 409, 413, 422, 429, 500, 503].includes(
@@ -69,10 +73,6 @@ export async function proxyApi(
       )
     )
       throw new Error("UPSTREAM_ERROR");
-    const responseHeaders = new Headers({ "Cache-Control": "no-store" });
-    const requestId = response.headers.get("X-Request-ID");
-    if (requestId && /^[0-9a-f-]{36}$/.test(requestId))
-      responseHeaders.set("X-Request-ID", requestId);
     return NextResponse.json(await response.json(), {
       status: response.status,
       headers: responseHeaders,

@@ -101,8 +101,19 @@ export function TripForm({
   );
   const [profileNotice, setProfileNotice] = useState("");
   const currentUser = useRef(session?.user.id);
+  const authEpoch = useRef(0);
   useEffect(() => {
-    currentUser.current = session?.user.id;
+    if (currentUser.current !== session?.user.id) {
+      currentUser.current = session?.user.id;
+      authEpoch.current += 1;
+      requestKey.current = null;
+      queueMicrotask(() => {
+        setResult(null);
+        setSaved(null);
+        setError("");
+        setPending(false);
+      });
+    }
     if (snapshotOwner && snapshotOwner !== session?.user.id) {
       queueMicrotask(() => {
         setSnapshot(null);
@@ -122,6 +133,7 @@ export function TripForm({
   async function applyProfile() {
     if (!session || pending) return;
     const owner = session.user.id;
+    const epoch = authEpoch.current;
     setPending(true);
     setError("");
     setProfileNotice("");
@@ -129,7 +141,7 @@ export function TripForm({
     if (!initial) setSaved(null);
     try {
       const profile = await getProfile();
-      if (currentUser.current !== owner) return;
+      if (currentUser.current !== owner || authEpoch.current !== epoch) return;
       if (!profile.answers || !profile.revision) {
         setProfileNotice(
           "Bạn chưa lưu sở thích cá nhân. Hãy vào Sở thích của tôi để tạo trước.",
@@ -153,17 +165,19 @@ export function TripForm({
         "Đã áp dụng sở thích vào bản nháp. Bạn có thể chỉnh riêng bên dưới, rồi kiểm tra và lưu chuyến đi.",
       );
     } catch (caught) {
-      if (currentUser.current === owner)
+      if (currentUser.current === owner && authEpoch.current === epoch)
         setError(
           caught instanceof Error ? caught.message : "Chưa tải được sở thích.",
         );
     } finally {
-      setPending(false);
+      if (authEpoch.current === epoch) setPending(false);
     }
   }
 
   async function save() {
     if (!result || !session || pending) return;
+    const epoch = authEpoch.current;
+    const owner = session.user.id;
     setPending(true);
     setError("");
     const signature = JSON.stringify({
@@ -175,24 +189,33 @@ export function TripForm({
       requestKey.current = { signature, id: crypto.randomUUID() };
     try {
       const response = initial
-        ? await updateTrip(initial.id, {
-            title,
-            trip: result.trip,
-            expected_revision: saved?.revision ?? initial.revision,
-          })
-        : await createTrip({
-            title,
-            trip: result.trip,
-            request_id: requestKey.current.id,
-          });
+        ? await updateTrip(
+            initial.id,
+            {
+              title,
+              trip: result.trip,
+              expected_revision: saved?.revision ?? initial.revision,
+            },
+            owner,
+          )
+        : await createTrip(
+            {
+              title,
+              trip: result.trip,
+              request_id: requestKey.current.id,
+            },
+            owner,
+          );
+      if (authEpoch.current !== epoch) return;
       setSaved(response);
       onSaved?.(response);
     } catch (caught) {
+      if (authEpoch.current !== epoch) return;
       setError(
         caught instanceof Error ? caught.message : "Chưa lưu được chuyến đi.",
       );
     } finally {
-      setPending(false);
+      if (authEpoch.current === epoch) setPending(false);
     }
   }
 
@@ -212,6 +235,7 @@ export function TripForm({
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (pending) return;
+    const epoch = authEpoch.current;
     const form = new FormData(event.currentTarget);
     // datetime-local contains no timezone. This product explicitly uses Vietnam time.
     const trip: TripRequest = {
@@ -242,15 +266,17 @@ export function TripForm({
     setResult(null);
     setError("");
     try {
-      setResult(await validateTrip(trip));
+      const response = await validateTrip(trip);
+      if (authEpoch.current === epoch) setResult(response);
     } catch (caught) {
+      if (authEpoch.current !== epoch) return;
       setError(
         caught instanceof Error
           ? caught.message
           : "Có lỗi kết nối. Vui lòng thử lại.",
       );
     } finally {
-      setPending(false);
+      if (authEpoch.current === epoch) setPending(false);
     }
   }
 

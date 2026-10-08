@@ -899,3 +899,107 @@ test("web proxy bounds input and returns consistent errors when API is unavailab
   expect((await health.json()).code).toBe("API_UNAVAILABLE");
   expect(health.headers()["cache-control"]).toBe("no-store");
 });
+
+for (const scenario of [
+  "saved",
+  "pending save",
+  "pending validation",
+] as const) {
+  test(`sign out clears ${scenario} results from the home form`, async ({
+    page,
+  }) => {
+    await mockAuth(page);
+    let release = () => {};
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    let started = () => {};
+    const requested = new Promise<void>((resolve) => {
+      started = resolve;
+    });
+    await page.route("**/api/trips**", async (route) => {
+      const request = route.request();
+      if (request.method() === "GET")
+        return route.fulfill({
+          json: { items: [], total: 0, offset: 0, limit: 20 },
+        });
+      const input = request.postDataJSON();
+      const validation = request.url().endsWith("/validate");
+      if (
+        (validation && scenario === "pending validation") ||
+        (!validation && scenario === "pending save")
+      ) {
+        started();
+        await gate;
+      }
+      await route.fulfill({
+        status: validation ? 200 : 201,
+        json: validation
+          ? {
+              status: "input_valid",
+              trip_days: 3,
+              total_budget_vnd: 8000000,
+              notices: [],
+              trip: input,
+            }
+          : {
+              id: tripId,
+              title: input.title,
+              trip: input.trip,
+              revision: 1,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+      });
+    });
+    await signIn(page);
+    await page.goto("/");
+    await page.getByLabel("Tên chuyến đi").fill("Bản nháp đang nhập");
+    await page.getByLabel("Đến Đà Lạt lúc").fill("2026-11-06T12:00");
+    await page.getByLabel("Rời Đà Lạt lúc").fill("2026-11-08T17:00");
+    await page
+      .getByRole("button", { name: "Kiểm tra thông tin chuyến đi" })
+      .click();
+    if (scenario !== "pending validation")
+      await page
+        .getByRole("button", { name: "Lưu chuyến đi", exact: true })
+        .click();
+    if (scenario === "saved")
+      await expect(
+        page.getByRole("link", { name: "Mở bản đã lưu →" }),
+      ).toBeVisible();
+    else await requested;
+    await page.getByRole("button", { name: "Đăng xuất", exact: true }).click();
+    await expect(
+      page.getByRole("link", { name: "Đăng nhập", exact: true }),
+    ).toBeVisible();
+    const response =
+      scenario === "saved"
+        ? null
+        : page.waitForResponse(
+            (r) =>
+              r.url().includes("/api/trips") && r.request().method() === "POST",
+          );
+    release();
+    if (response) await (await response).finished();
+    // A fresh validation establishes that the old response has been consumed and
+    // that the preserved guest draft is usable after the session change.
+    await expect(
+      page.getByRole("link", { name: "Mở bản đã lưu →" }),
+    ).toHaveCount(0);
+    await expect(page.getByText("Thông tin đầu vào hợp lệ")).toHaveCount(0);
+    await expect(page.getByLabel("Tên chuyến đi")).toHaveValue(
+      "Bản nháp đang nhập",
+    );
+    await page
+      .getByRole("button", { name: "Kiểm tra thông tin chuyến đi" })
+      .click();
+    await expect(page.getByText("Thông tin đầu vào hợp lệ")).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Mở bản đã lưu →" }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: "Lưu chuyến đi", exact: true }),
+    ).toHaveCount(0);
+  });
+}

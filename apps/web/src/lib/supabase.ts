@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { isPublicSupabaseKey } from "./public-key.mjs";
 
 let client: SupabaseClient | null = null;
 
@@ -10,7 +11,7 @@ export function getSupabase(): SupabaseClient | null {
     !key ||
     url.includes("YOUR_PROJECT") ||
     key.includes("YOUR_") ||
-    key.startsWith("sb_secret_")
+    !isPublicSupabaseKey(key)
   )
     return null;
   client ??= createClient(url, key);

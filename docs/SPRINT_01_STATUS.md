@@ -172,3 +172,9 @@ Nghiệm thu cuối: 8 browser flows chính qua bằng standalone launcher; case
 - [x] Lưu Compose smoke override/config mẫu và cập nhật CI dùng cùng quy trình đã kiểm chứng.
 
 Giới hạn Docker/WSL ở ghi chú trước đã được giải quyết sau khi user mở Docker Desktop. Cấu hình Auth là project/key giả chỉ cho smoke; không thay nghiệm thu Supabase thật. Container/database/network smoke được dọn sau kiểm chứng; images còn trong cache. Không đổi dữ liệu Supabase hoặc dev server của user. GitHub run và staging vẫn chưa nghiệm thu.
+
+## Review sau foundation local (2026-10-08)
+
+Đã sửa guard public Supabase key trước build, state/response cũ khi đổi phiên trên form tạo trip và request ID của BFF 204. API 132 tests và browser 12 flows đã qua; xem [review đầy đủ](FOUNDATION_REVIEW.md) để phân biệt kết quả mới với bằng chứng Docker/PostgreSQL trước đó. Phạm vi local giữ nguyên; staging và live provider qualification còn mở.
+
+Kế hoạch triển khai hiện hành: [M1 Data & taste, chuẩn bị M2](NEXT_PHASE_PLAN.md), ưu tiên dictionary/schema → admin/audit → 30–50 POI → wizard/ranking/evaluation. Không lặp lại foundation hoặc coi revision draft là itinerary version history.

@@ -17,7 +17,8 @@
     "lint": "npm run lint --workspace @wayo/web",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "api:types": "openapi-typescript apps/api/openapi.json -o apps/web/src/lib/api-schema.d.ts"
+    "api:types": "openapi-typescript apps/api/openapi.json -o apps/web/src/lib/api-schema.d.ts",
+    "test:web": "node --test apps/web/src/lib/*.test.mjs"
   },
   "devDependencies": {
     "@playwright/test": "1.63.0",

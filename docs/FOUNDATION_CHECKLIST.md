@@ -20,6 +20,15 @@ Phạm vi được chọn ngày 2026-10-08: hoàn tất foundation local, chuẩ
 - Browser flow và smoke web standalone → API → PostgreSQL được ghi trong [status sprint](SPRINT_01_STATUS.md).
 - Kiểm chứng cài lại từ source không có dotenv/node_modules/venv trong `/tmp`; không ghi dữ liệu vào Supabase thật.
 
+## Review bổ sung
+
+- [x] Chặn khóa Supabase secret/service-role trước build public bundle.
+- [x] Xóa kết quả phiên cũ và bỏ qua response đến muộn khi đổi user/logout trên form home.
+- [x] Giữ request ID cho BFF DELETE 204.
+- [x] Thêm regression tests và lệnh `npm run test:web` vào CI.
+
+Chi tiết và giới hạn kiểm chứng: [review foundation](FOUNDATION_REVIEW.md). Công việc tiếp theo: [plan M1](NEXT_PHASE_PLAN.md).
+
 ## Gate sau foundation local
 
 - [x] Docker Desktop/WSL: build cả hai image, Compose migration → API → web healthy và smoke qua PostgreSQL dùng một lần.

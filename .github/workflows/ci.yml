@@ -47,6 +47,7 @@ jobs:
       - run: python apps/api/scripts/export_openapi.py
       - run: npm run api:types
       - run: git diff --exit-code -- apps/api/openapi.json apps/web/src/lib/api-schema.d.ts
+      - run: npm run test:web
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run format:check

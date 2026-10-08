@@ -4,6 +4,8 @@ Ngày lập: 07/10/2026. Cập nhật 08/10/2026: foundation local đã có auth
 
 Nguồn: [Wayo Product & Technical Blueprint](../Wayo_Product_Technical_Blueprint.md), mục 1–77. Tài liệu này chuyển định hướng trong blueprint thành công việc có thể theo dõi; các lựa chọn bổ sung bên dưới là đề xuất, chưa phải quyết định đã được chủ dự án xác nhận. Không coi các ví dụ địa điểm, giá, điểm match hoặc free tier trong blueprint là dữ liệu đã xác minh.
 
+Cập nhật sau foundation local (08/10/2026): [review và bản sửa](FOUNDATION_REVIEW.md), [plan chi tiết M1 → M2](NEXT_PHASE_PLAN.md). Dùng task con M1-xx để triển khai tiếp; các ước lượng từ thời điểm chưa có code bên dưới là baseline lịch sử, không phải forecast hiện tại.
+
 ## 1. Kết quả cần đạt
 
 Một người dùng có thể nhập sở thích và điều kiện chuyến đi Đà Lạt 2–4 ngày, nhận lịch trình cá nhân hóa có thời gian di chuyển, xem trên timeline và bản đồ, sửa bằng thao tác hoặc ngôn ngữ tự nhiên, xem dự toán và chia sẻ bằng link.
