@@ -55,3 +55,13 @@ def current_user(
 
 
 UserId = Annotated[UUID, Depends(current_user)]
+
+
+def current_admin(user_id: UserId) -> UUID:
+    # Server-controlled allowlist; never trust user_metadata or a client-supplied role.
+    if user_id not in get_settings().admin_user_ids:
+        raise api_error(403, "ADMIN_REQUIRED", "Tài khoản không có quyền quản trị.")
+    return user_id
+
+
+AdminId = Annotated[UUID, Depends(current_admin)]

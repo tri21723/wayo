@@ -1,26 +1,27 @@
 # Sprint 01 — Foundation
 
-Cập nhật: 07/10/2026. Đã có code cho auth và storage bản nháp; đã kết nối Supabase thật và chạy migration; chưa đạt M0 vì chưa nghiệm thu đăng nhập/lưu trip với tài khoản thật và chưa triển khai staging.
+Cập nhật: 08/10/2026. User chọn hoàn tất foundation local và chuẩn bị deployment. Auth/Trip CRUD đã được user nghiệm thu trên Supabase thật; foundation local có operational probes, admin guard, provider adapters và standalone deployment. M0 staging chưa hoàn tất; xem [checklist local](FOUNDATION_CHECKLIST.md).
 
 ## Tiến độ task
 
-| Task     | Trạng thái | Bằng chứng / phần còn lại                                                                                                             |
-| -------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| PROD-01  | DOING      | Scope trong ADR 0001; provider/budget/nhân lực còn mở                                                                                 |
-| PROD-02  | DONE       | Alpha spec có 9 user stories, acceptance và error paths                                                                               |
-| PROD-03  | REVIEW     | Wireframe và các màn setup/login/trip list/editor; chưa walkthrough với người dùng                                                    |
-| PROD-04  | DONE       | Spec phân biệt input validity, itinerary feasibility, budget và constraints                                                           |
-| BASE-01  | REVIEW     | Repo, scripts, env examples, locks và README; chưa thử trên máy mới                                                                   |
-| BASE-02  | REVIEW     | Web/API/OpenAPI/generated types/error contract; chờ staging                                                                           |
-| BASE-03  | REVIEW     | SQLAlchemy + Alembic 0001, schema riêng; đã thử trên PostgreSQL tạm; đã áp dụng Supabase thật                                         |
-| BASE-04  | REVIEW     | Supabase client + JWT verification + owner isolation; user đã xác nhận auth chạy đúng trên Supabase thật; admin authorization chưa có |
-| BASE-05  | REVIEW     | Trip create/list/get/update/delete và UI đã implement; user đã xác nhận test local với Supabase thật thành công; staging chưa có      |
-| BASE-06  | DOING      | CI bổ sung PostgreSQL và Playwright; chưa xác minh run mới trên GitHub, chưa deploy                                                   |
-| DB-01    | DOING      | ERD/migrations users/trips có thật; profiles và catalog JSON đã có; schema chuẩn hóa destinations/tags/sources/hours còn thiếu        |
-| DB-02/05 | TODO       | Revision trip draft không thay thế immutable itinerary version history/undo                                                           |
-| TASTE-04 | DOING      | Form và validation có thể lưu; chưa anchor picker/fixed-event editor                                                                  |
-| DATA-01  | DOING      | Capture template; chưa chọn nguồn và curate POI                                                                                       |
-| QA-02/03 | DOING      | Auth/CRUD/validation tests và browser flows; planner/e2e provider thật chưa có                                                        |
+| Task     | Trạng thái | Bằng chứng / phần còn lại                                                                                                                                             |
+| -------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PROD-01  | DOING      | Scope trong ADR 0001; provider/budget/nhân lực còn mở                                                                                                                 |
+| PROD-02  | DONE       | Alpha spec có 9 user stories, acceptance và error paths                                                                                                               |
+| PROD-03  | REVIEW     | Wireframe và các màn setup/login/trip list/editor; chưa walkthrough với người dùng                                                                                    |
+| PROD-04  | DONE       | Spec phân biệt input validity, itinerary feasibility, budget và constraints                                                                                           |
+| BASE-01  | REVIEW     | Repo, scripts, env examples, locks và README; đã kiểm chứng cài từ source sạch local; staging gate còn mở                                                             |
+| BASE-02  | REVIEW     | Web/API/OpenAPI/types, error contract, readiness/logs, standalone; chờ staging                                                                                        |
+| BASE-03  | REVIEW     | SQLAlchemy + Alembic 0001, schema riêng; đã thử trên PostgreSQL tạm; đã áp dụng Supabase thật                                                                         |
+| BASE-04  | REVIEW     | Supabase client + JWT verification + owner isolation; user đã xác nhận auth chạy đúng trên Supabase thật; admin allowlist server-only đã có; chưa có admin catalog UI |
+| BASE-05  | REVIEW     | Trip create/list/get/update/delete và UI đã implement; user đã xác nhận test local với Supabase thật thành công; staging chưa có                                      |
+| BASE-06  | DOING      | CI thêm PostgreSQL/browser/container build+smoke; artifact deployment và Docker Desktop smoke đã qua; chưa xác minh GitHub/staging                                    |
+| BASE-07  | DOING      | Adapter OSRM/Open-Meteo/OpenAI + contract tests, timeout/usage caps; live qualification/model/cost còn mở                                                             |
+| DB-01    | DOING      | ERD/migrations users/trips có thật; profiles và catalog JSON đã có; schema chuẩn hóa destinations/tags/sources/hours còn thiếu                                        |
+| DB-02/05 | TODO       | Revision trip draft không thay thế immutable itinerary version history/undo                                                                                           |
+| TASTE-04 | DOING      | Anchor/fixed events/day schedule đã có; map picker và travel validation còn thiếu                                                                                     |
+| DATA-01  | DOING      | Capture template; chưa chọn nguồn và curate POI                                                                                                                       |
+| QA-02/03 | DOING      | Auth/CRUD/validation tests và browser flows; planner/e2e provider thật chưa có                                                                                        |
 
 Các task chỉ đánh dấu DONE khi đủ acceptance, không suy từ việc có code. Xem [plan chính](WAYO_IMPLEMENTATION_PLAN.md) và [ADR storage/auth](decisions/0002-trip-storage-and-auth.md).
 
@@ -146,3 +147,28 @@ Kiểm chứng giờ có thể ghé: toàn bộ 88 test API qua trên SQLite t�
 Không cần migration hoặc cấu hình Supabase thêm. PLAN-04 và TASTE-04 vẫn chưa hoàn tất toàn bộ; xem [ADR 0008](decisions/0008-custom-daily-schedule.md). Các giới hạn 09:00–21:00 và chưa tính giờ nghỉ trong ghi chú trước được thay bằng cấu hình mới này.
 
 Kiểm chứng: toàn bộ 98 test API qua trên SQLite tạm và 8/8 browser flows qua trên production build; Ruff, lint, TypeScript, format và production build đạt. CI bổ sung test lịch hằng ngày vào lượt PostgreSQL. Kiểm thử trình duyệt dùng Auth/API mock, không thay nghiệm thu bằng tài khoản Supabase thật.
+
+## Hoàn tất engineering foundation local (2026-10-08)
+
+Theo phạm vi user chọn: local + chuẩn bị deployment. [Checklist foundation](FOUNDATION_CHECKLIST.md) tách gate local khỏi M0 staging.
+
+- [x] Readiness kiểm tra database, migration và Auth config; BFF `/api/health` và smoke script.
+- [x] Admin dependency từ allowlist server-only, deny mặc định, không tin metadata do client gửi.
+- [x] Request ID, JSON metadata logs, body cap 64 KiB và error contract 500 đã redaction.
+- [x] Ba adapter provider, default disabled, giới hạn operation/call/token/response, typed failure, không automatic retry/cache.
+- [x] Dockerfiles/Compose không chứa dotenv; standalone launcher, migration job, health dependency và environment guard cho TLS.
+- [x] CI và deployment/provider runbooks cập nhật; checklist tổng giữ các gate ngoài local chưa hoàn tất.
+
+Kiểm chứng: 132 test API qua trên SQLite và PostgreSQL tạm, migration/RLS/owner/admin/readiness đạt. Provider tests dùng HTTP mock; không gọi LLM trả phí, không chạm dữ liệu Supabase thật. Docker Engine chưa hoạt động trong WSL; không coi image build/run hoặc GitHub workflow là đã xác minh.
+
+Nghiệm thu cuối: 8 browser flows chính qua bằng standalone launcher; case BFF mới qua khi chạy lại với raw invalid JSON (tổng 9 flows). Cài Node/Python từ source sạch không dotenv thành công, pip check không lỗi; build và toàn bộ 132 tests trên venv sạch cũng qua. Smoke HTTP web standalone cổng riêng → API → PostgreSQL trả ready, homepage 200 và X-Request-ID được forward. Ba CLI provider inspection đều có calls=0. Không dừng dev server của user.
+
+## Nghiệm thu Docker Desktop (2026-10-08)
+
+- [x] Docker Desktop 29.5.2 / Compose 5.1.4 kết nối WSL; build API và web images thành công.
+- [x] Project `wayo-foundation-check` chạy PostgreSQL 16 dùng một lần, migrate exit 0 ở head 0003; cả 4 bảng app bật RLS.
+- [x] PostgreSQL/API/web healthy; smoke web → API → DB ready, homepage 200, private route 401, valid trip 200 và invalid day schedule 422.
+- [x] API/web chạy UID 10001; không có dotenv trong runtime; provider mặc định disabled; request ID đi qua BFF.
+- [x] Lưu Compose smoke override/config mẫu và cập nhật CI dùng cùng quy trình đã kiểm chứng.
+
+Giới hạn Docker/WSL ở ghi chú trước đã được giải quyết sau khi user mở Docker Desktop. Cấu hình Auth là project/key giả chỉ cho smoke; không thay nghiệm thu Supabase thật. Container/database/network smoke được dọn sau kiểm chứng; images còn trong cache. Không đổi dữ liệu Supabase hoặc dev server của user. GitHub run và staging vẫn chưa nghiệm thu.

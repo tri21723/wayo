@@ -1,0 +1,36 @@
+# Override host-exported credentials: smoke must always use the disposable database.
+x-smoke-api: &smoke-api
+  image: wayo-api:foundation-check
+  environment:
+    WAYO_ENVIRONMENT: local
+    WAYO_DATABASE_URL: postgresql+psycopg://wayo_test:wayo_test@smoke-db:5432/wayo_docker_test
+    WAYO_SUPABASE_URL: https://test-project.supabase.co
+    WAYO_ADMIN_USER_IDS: "[]"
+    WAYO_PROVIDERS_ENABLED: "[]"
+
+services:
+  smoke-db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: wayo_test
+      POSTGRES_PASSWORD: wayo_test
+      POSTGRES_DB: wayo_docker_test
+    healthcheck:
+      test:
+        [CMD-SHELL, "pg_isready -h 127.0.0.1 -U wayo_test -d wayo_docker_test"]
+      interval: 2s
+      timeout: 5s
+      retries: 20
+  migrate:
+    <<: *smoke-api
+    depends_on:
+      smoke-db:
+        condition: service_healthy
+  api:
+    <<: *smoke-api
+  web:
+    image: wayo-web:foundation-check
+    build:
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: https://test-project.supabase.co
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_container_test_key

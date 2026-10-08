@@ -1,6 +1,6 @@
 # Wayo — Kế hoạch triển khai và checklist MVP
 
-Ngày lập: 07/10/2026. Trạng thái: đang triển khai sprint đầu; auth và Trip CRUD đã có code, chờ cấu hình dịch vụ thật/staging. Xem [tiến độ và bằng chứng](SPRINT_01_STATUS.md).
+Ngày lập: 07/10/2026. Cập nhật 08/10/2026: foundation local đã có auth/trip CRUD, operational probes, provider boundary và chuẩn bị deployment; M0 staging chưa nghiệm thu. Xem [tiến độ và bằng chứng](SPRINT_01_STATUS.md).
 
 Nguồn: [Wayo Product & Technical Blueprint](../Wayo_Product_Technical_Blueprint.md), mục 1–77. Tài liệu này chuyển định hướng trong blueprint thành công việc có thể theo dõi; các lựa chọn bổ sung bên dưới là đề xuất, chưa phải quyết định đã được chủ dự án xác nhận. Không coi các ví dụ địa điểm, giá, điểm match hoặc free tier trong blueprint là dữ liệu đã xác minh.
 
@@ -154,6 +154,8 @@ Nghiệm thu: walkthrough demo chính trên wireframe; không còn mâu thuẫn 
 
 Phụ thuộc: PROD-01, PROD-02.
 
+Ngày 2026-10-08 user chọn hoàn tất local và chuẩn bị deployment. Xem [checklist foundation local](FOUNDATION_CHECKLIST.md); checkbox tổng thể dưới đây vẫn giữ gate staging/live qualification, không suy DONE từ kết quả local.
+
 - [ ] **BASE-01 · P0** Tạo repo structure, scripts chạy local, `.env.example`, formatter/linter, dependency lock; README cho máy mới.
 - [ ] **BASE-02 · P0** Khởi tạo web/API, health endpoint, OpenAPI và typed API client; xử lý lỗi chung.
 - [ ] **BASE-03 · P0** Tạo database migration workflow; tách local/staging/production, seed sample không chứa dữ liệu cá nhân.
@@ -161,6 +163,7 @@ Phụ thuộc: PROD-01, PROD-02.
 - [ ] **BASE-05 · P0** Trip CRUD và trip list tối thiểu; không user nào đọc/sửa được trip của user khác.
 - [ ] **BASE-06 · P0** CI chạy lint/typecheck/build và các test liên quan; deploy staging có web → API → DB.
 - [ ] **BASE-07 · P0** Adapter skeleton và spike LLM/routing/weather; ghi khả năng hỗ trợ, quota, điều khoản cache, chi phí; đặt timeout và cấu hình trần sử dụng.
+  - Đã có ba adapter và contract spike qua HTTP mock, giới hạn call/response/token và CLI opt-in. Live quality/cost/model/quota/cache qualification chưa hoàn tất; xem provider runbook.
 
 Nghiệm thu: máy mới chạy theo README; user A tạo trip, user B bị từ chối truy cập; staging dùng cấu hình riêng và không chứa secret trong bundle/log.
 

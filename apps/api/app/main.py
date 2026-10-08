@@ -5,6 +5,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from starlette.exceptions import HTTPException
 
 from app.availability import router as availability_router
+from app.observability import RequestLogging
+from app.operations import router as operations_router
 from app.profiles import router as profiles_router
 from app.recommendations import router as recommendations_router
 from app.schemas import ApiError, ErrorDetail, Health, InputNotice, TripRequest, TripValidation
@@ -15,6 +17,8 @@ app = FastAPI(
     version="0.1.0",
     description="Trip validation and owner-scoped draft storage. No itinerary generation yet.",
 )
+
+app.add_middleware(RequestLogging)
 
 
 @app.exception_handler(HTTPException)
@@ -106,3 +110,5 @@ app.include_router(trips_router)
 app.include_router(profiles_router)
 app.include_router(recommendations_router)
 app.include_router(availability_router)
+
+app.include_router(operations_router)

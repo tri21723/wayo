@@ -839,10 +839,122 @@
           }
         }
       }
+    },
+    "/ready": {
+      "get": {
+        "tags": [
+          "Operations"
+        ],
+        "summary": "Ready",
+        "operationId": "ready_ready_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Readiness"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/status": {
+      "get": {
+        "tags": [
+          "Operations"
+        ],
+        "summary": "Admin Status",
+        "operationId": "admin_status_v1_admin_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminStatus"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
     }
   },
   "components": {
     "schemas": {
+      "AdminStatus": {
+        "properties": {
+          "role": {
+            "type": "string",
+            "const": "admin",
+            "title": "Role",
+            "default": "admin"
+          },
+          "environment": {
+            "type": "string",
+            "enum": [
+              "local",
+              "staging",
+              "production"
+            ],
+            "title": "Environment"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "environment"
+        ],
+        "title": "AdminStatus"
+      },
       "Anchor": {
         "properties": {
           "label": {
@@ -1493,6 +1605,37 @@
           "answers"
         ],
         "title": "ProfileUpdate"
+      },
+      "Readiness": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ready",
+            "title": "Status",
+            "default": "ready"
+          },
+          "database": {
+            "type": "string",
+            "const": "ready",
+            "title": "Database",
+            "default": "ready"
+          },
+          "migrations": {
+            "type": "string",
+            "const": "current",
+            "title": "Migrations",
+            "default": "current"
+          },
+          "auth": {
+            "type": "string",
+            "const": "configured",
+            "title": "Auth",
+            "default": "configured"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "Readiness"
       },
       "Recommendations": {
         "properties": {

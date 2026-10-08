@@ -18,6 +18,7 @@ export default defineConfig({
     reuseExistingServer: false,
     env: {
       WAYO_E2E: "1",
+      WAYO_API_URL: "http://127.0.0.1:9",
       NEXT_PUBLIC_SUPABASE_URL: "http://127.0.0.1:54321",
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "e2e-public-test-key",
     },

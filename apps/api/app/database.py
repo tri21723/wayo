@@ -12,7 +12,12 @@ from app.settings import get_settings
 
 @lru_cache(maxsize=4)
 def engine_for(url: str) -> Engine:
-    engine = create_engine(url, pool_pre_ping=True)
+    options = (
+        {"connect_args": {"connect_timeout": 5}, "pool_timeout": 5}
+        if url.startswith("postgresql+psycopg:")
+        else {}
+    )
+    engine = create_engine(url, pool_pre_ping=True, **options)
     if engine.dialect.name == "sqlite":
         engine = engine.execution_options(schema_translate_map={"wayo": None})
 

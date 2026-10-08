@@ -1,0 +1,15 @@
+.git
+**/.env
+**/.env.*
+**/node_modules
+**/.next
+**/.next-e2e
+.venv
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
+**/*.egg-info
+**/*.tsbuildinfo
+test-results
+playwright-report
+coverage

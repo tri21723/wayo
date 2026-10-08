@@ -877,3 +877,25 @@ test("daily availability shows fixed bookings and rejects stale results", async 
     page.getByText("Chưa tải được bảng thời gian thử nghiệm."),
   ).toBeVisible();
 });
+
+test("web proxy bounds input and returns consistent errors when API is unavailable", async ({
+  request,
+}) => {
+  const oversized = await request.post("/api/trips/validate", {
+    data: "x".repeat(70_000),
+    headers: { "Content-Type": "application/json" },
+  });
+  expect(oversized.status()).toBe(413);
+  expect((await oversized.json()).code).toBe("PAYLOAD_TOO_LARGE");
+  const invalid = await request.post("/api/trips/validate", {
+    data: Buffer.from("not-json"),
+    headers: { "Content-Type": "application/json" },
+  });
+  expect(invalid.status()).toBe(400);
+  const denied = await request.get("/api/trips");
+  expect(denied.status()).toBe(401);
+  const health = await request.get("/api/health");
+  expect(health.status()).toBe(503);
+  expect((await health.json()).code).toBe("API_UNAVAILABLE");
+  expect(health.headers()["cache-control"]).toBe("no-store");
+});

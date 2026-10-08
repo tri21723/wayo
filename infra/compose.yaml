@@ -1,0 +1,65 @@
+name: wayo-${WAYO_ENVIRONMENT:-local}
+
+x-api: &api
+  image: wayo-api:${WAYO_IMAGE_TAG:-local}
+  build:
+    context: ..
+    dockerfile: infra/api.Dockerfile
+  environment:
+    WAYO_ENVIRONMENT: ${WAYO_ENVIRONMENT:-local}
+    WAYO_DATABASE_URL: ${WAYO_DATABASE_URL:?Set a database URL for this environment}
+    WAYO_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:?Set the Supabase project URL}
+    WAYO_ADMIN_USER_IDS: ${WAYO_ADMIN_USER_IDS:-[]}
+    WAYO_PROVIDERS_ENABLED: "[]"
+  init: true
+
+services:
+  migrate:
+    <<: *api
+    command: ["alembic", "-c", "/app/alembic.ini", "upgrade", "head"]
+    restart: "no"
+
+  api:
+    <<: *api
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/ready', timeout=5)"
+      interval: 30s
+      timeout: 6s
+      retries: 3
+      start_period: 20s
+
+  web:
+    image: wayo-web:${WAYO_IMAGE_TAG:-local}
+    build:
+      context: ..
+      dockerfile: infra/web.Dockerfile
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:?Set the Supabase project URL}
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:?Set the publishable key}
+    environment:
+      WAYO_API_URL: http://api:8000
+    init: true
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${WAYO_WEB_PORT:-3000}:3000"
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/api/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
