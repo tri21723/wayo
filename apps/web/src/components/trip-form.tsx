@@ -1,10 +1,11 @@
 "use client";
 
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useAuth } from "@/components/auth-provider";
 import {
   createTrip,
+  getProfile,
   updateTrip,
   validateTrip,
   type SavedTrip,
@@ -18,8 +19,28 @@ const tasteOptions = [
   "Chụp ảnh",
   "Đồ ăn local",
   "Văn hóa",
+  "Hoạt động buổi tối",
 ];
-const avoidOptions = ["Trekking", "Nơi đông người", "Lịch quá dày"];
+const avoidOptions = [
+  "Trekking",
+  "Nơi đông người",
+  "Lịch quá dày",
+  "Cầu thang",
+  "Rượu bia",
+];
+const interestLabels = {
+  cafe: "Cafe",
+  nature: "Thiên nhiên",
+  photography: "Chụp ảnh",
+  food: "Đồ ăn local",
+  culture: "Văn hóa",
+  nightlife: "Hoạt động buổi tối",
+};
+const exclusionLabels = {
+  trekking: "Trekking",
+  stairs: "Cầu thang",
+  alcohol: "Rượu bia",
+};
 const money = new Intl.NumberFormat("vi-VN", {
   style: "currency",
   currency: "VND",
@@ -55,6 +76,87 @@ export function TripForm({
   const [title, setTitle] = useState(initial?.title ?? "Chuyến đi Đà Lạt");
   const [saved, setSaved] = useState<SavedTrip | null>(null);
   const requestKey = useRef<{ signature: string; id: string } | null>(null);
+
+  const [snapshot, setSnapshot] = useState<TripRequest["taste_snapshot"]>(
+    initial?.trip.taste_snapshot ?? null,
+  );
+  const [snapshotOwner, setSnapshotOwner] = useState<string | null>(
+    initial?.trip.taste_snapshot ? (session?.user.id ?? null) : null,
+  );
+  const [pace, setPace] = useState<TripRequest["pace"]>(
+    initial?.trip.pace ?? "relaxed",
+  );
+  const [diet, setDiet] = useState<TripRequest["diet"]>(
+    initial?.trip.diet ?? "unrestricted",
+  );
+  const [crowd, setCrowd] = useState<TripRequest["crowd"]>(
+    initial?.trip.crowd ?? "neutral",
+  );
+  const [adventure, setAdventure] = useState<TripRequest["adventure"]>(
+    initial?.trip.adventure ?? null,
+  );
+  const [profileNotice, setProfileNotice] = useState("");
+  const currentUser = useRef(session?.user.id);
+  useEffect(() => {
+    currentUser.current = session?.user.id;
+    if (snapshotOwner && snapshotOwner !== session?.user.id) {
+      queueMicrotask(() => {
+        setSnapshot(null);
+        setSnapshotOwner(null);
+        setProfileNotice("");
+        setPreferences(["Cafe", "Chụp ảnh", "Đồ ăn local"]);
+        setExclusions(["Trekking"]);
+        setDiet("unrestricted");
+        setCrowd("neutral");
+        setAdventure(null);
+        setPace("relaxed");
+        setResult(null);
+        setSaved(null);
+      });
+    }
+  }, [session?.user.id, snapshotOwner]);
+  async function applyProfile() {
+    if (!session || pending) return;
+    const owner = session.user.id;
+    setPending(true);
+    setError("");
+    setProfileNotice("");
+    setResult(null);
+    if (!initial) setSaved(null);
+    try {
+      const profile = await getProfile();
+      if (currentUser.current !== owner) return;
+      if (!profile.answers || !profile.revision) {
+        setProfileNotice(
+          "Bạn chưa lưu sở thích cá nhân. Hãy vào Sở thích của tôi để tạo trước.",
+        );
+        return;
+      }
+      const answers = profile.answers;
+      setSnapshot({
+        schema_version: 1,
+        profile_revision: profile.revision,
+        answers,
+      });
+      setSnapshotOwner(owner);
+      setPreferences(answers.interests.map((value) => interestLabels[value]));
+      setExclusions(answers.exclusions.map((value) => exclusionLabels[value]));
+      setPace(answers.pace);
+      setDiet(answers.diet);
+      setCrowd(answers.crowd);
+      setAdventure(answers.adventure);
+      setProfileNotice(
+        "Đã áp dụng sở thích vào bản nháp. Bạn có thể chỉnh riêng bên dưới, rồi kiểm tra và lưu chuyến đi.",
+      );
+    } catch (caught) {
+      if (currentUser.current === owner)
+        setError(
+          caught instanceof Error ? caught.message : "Chưa tải được sở thích.",
+        );
+    } finally {
+      setPending(false);
+    }
+  }
 
   async function save() {
     if (!result || !session || pending) return;
@@ -123,7 +225,11 @@ export function TripForm({
         currency: "VND",
       },
       transport_mode: "driving",
-      pace: form.get("pace") as TripRequest["pace"],
+      pace,
+      diet,
+      crowd,
+      adventure,
+      taste_snapshot: snapshotOwner === session?.user.id ? snapshot : null,
       preferences,
       exclusions,
       fixed_events: initial?.trip.fixed_events ?? [],
@@ -283,12 +389,39 @@ export function TripForm({
             />
             Không vượt ngân sách dự toán
           </label>
+          <div className="profile-import">
+            <h3>Sở thích cho chuyến đi này</h3>
+            <p>
+              Áp dụng sẽ thay thế sở thích, điều cần tránh, nhịp đi và chế độ ăn
+              trong bản nháp này. Profile cá nhân giữ nguyên.
+            </p>
+            {session ? (
+              <button type="button" onClick={applyProfile}>
+                Áp dụng sở thích cá nhân
+              </button>
+            ) : (
+              <p>
+                Đăng nhập để dùng sở thích cá nhân; bạn vẫn có thể tự chọn bên
+                dưới.
+              </p>
+            )}
+            {snapshot && snapshotOwner === session?.user.id && (
+              <p>
+                Đã lấy từ hồ sơ sở thích phiên bản {snapshot.profile_revision}.
+                Các thay đổi bên dưới chỉ áp dụng cho chuyến đi này.
+              </p>
+            )}
+            {profileNotice && <p role="status">{profileNotice}</p>}
+          </div>
           <div className="field-row">
             <label>
               Nhịp đi
               <select
                 name="pace"
-                defaultValue={initial?.trip.pace ?? "relaxed"}
+                value={pace}
+                onChange={(event) =>
+                  setPace(event.target.value as TripRequest["pace"])
+                }
               >
                 <option value="relaxed">Thảnh thơi</option>
                 <option value="balanced">Cân bằng</option>
@@ -302,42 +435,95 @@ export function TripForm({
               </select>
             </label>
           </div>
+          <div className="field-row">
+            <label>
+              Chế độ ăn cho chuyến đi
+              <select
+                value={diet}
+                onChange={(event) =>
+                  setDiet(event.target.value as TripRequest["diet"])
+                }
+              >
+                <option value="unrestricted">Không giới hạn</option>
+                <option value="vegetarian">Ăn chay</option>
+                <option value="vegan">Thuần chay</option>
+              </select>
+            </label>
+            <label>
+              Không khí yêu thích
+              <select
+                value={crowd}
+                onChange={(event) =>
+                  setCrowd(event.target.value as TripRequest["crowd"])
+                }
+              >
+                <option value="neutral">Không ưu tiên</option>
+                <option value="quiet">Yên tĩnh</option>
+                <option value="lively">Nhộn nhịp</option>
+              </select>
+            </label>
+          </div>
+          <label>
+            Mức vận động yêu thích
+            <select
+              value={adventure ?? ""}
+              onChange={(event) =>
+                setAdventure(
+                  (event.target.value || null) as TripRequest["adventure"],
+                )
+              }
+            >
+              <option value="">Không ưu tiên</option>
+              <option value="easy">Nhẹ nhàng</option>
+              <option value="moderate">Vừa phải</option>
+              <option value="challenging">Thử thách</option>
+            </select>
+          </label>
+          <p className="field-help">
+            Không khí và vận động dùng để ưu tiên gợi ý. Các điều cần tránh là
+            bộ lọc riêng. Với địa điểm ăn uống, chế độ ăn yêu cầu thông tin đã
+            xác minh.
+          </p>
           <fieldset className="choice-group">
             <legend>Bạn thích trải nghiệm nào?</legend>
             <div className="chips">
-              {tasteOptions.map((taste) => (
-                <button
-                  type="button"
-                  key={taste}
-                  aria-pressed={preferences.includes(taste)}
-                  onClick={() => {
-                    toggle(taste, preferences, setPreferences);
-                    setResult(null);
-                    setError("");
-                  }}
-                >
-                  {taste}
-                </button>
-              ))}
+              {Array.from(new Set([...tasteOptions, ...preferences])).map(
+                (taste) => (
+                  <button
+                    type="button"
+                    key={taste}
+                    aria-pressed={preferences.includes(taste)}
+                    onClick={() => {
+                      toggle(taste, preferences, setPreferences);
+                      setResult(null);
+                      setError("");
+                    }}
+                  >
+                    {taste}
+                  </button>
+                ),
+              )}
             </div>
           </fieldset>
           <fieldset className="choice-group">
             <legend>Bạn muốn tránh điều gì?</legend>
             <div className="chips">
-              {avoidOptions.map((avoid) => (
-                <button
-                  type="button"
-                  key={avoid}
-                  aria-pressed={exclusions.includes(avoid)}
-                  onClick={() => {
-                    toggle(avoid, exclusions, setExclusions);
-                    setResult(null);
-                    setError("");
-                  }}
-                >
-                  {avoid}
-                </button>
-              ))}
+              {Array.from(new Set([...avoidOptions, ...exclusions])).map(
+                (avoid) => (
+                  <button
+                    type="button"
+                    key={avoid}
+                    aria-pressed={exclusions.includes(avoid)}
+                    onClick={() => {
+                      toggle(avoid, exclusions, setExclusions);
+                      setResult(null);
+                      setError("");
+                    }}
+                  >
+                    {avoid}
+                  </button>
+                ),
+              )}
             </div>
           </fieldset>
           <button className="primary" type="submit">

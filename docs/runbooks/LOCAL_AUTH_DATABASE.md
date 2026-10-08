@@ -118,6 +118,16 @@ Sau khi API/web nạp code mới, mở `/profile` hoặc chọn **Sở thích c�
 4. Đăng xuất: nội dung profile phải bị ẩn. Tài khoản khác không được nhìn thấy profile cũ.
 5. Kiểm tra trip đã lưu vẫn giữ nguyên nội dung.
 
-Profile hiện được lưu độc lập; chưa tự áp dụng vào trip hoặc gợi ý địa điểm. Không cần nhập POI giả để thử luồng này.
+Trong form trip, chọn **Áp dụng sở thích cá nhân**, chỉnh riêng nếu cần, kiểm tra rồi lưu. Profile mới hơn không tự thay đổi trip đã lưu. Không cần nhập POI giả để thử luồng này.
 
 Browser tests mặc định chạy dev server riêng. Có thể thử production build bằng `WAYO_E2E=1 npm run build`, sau đó `WAYO_E2E_PRODUCTION=1 npm run test:e2e`. Các yêu cầu Auth và API trong browser tests được mock, không tạo tài khoản hoặc dữ liệu thật.
+
+## Nghiệm thu snapshot sở thích
+
+1. Lưu profile có sở thích thiên nhiên, chế độ ăn thuần chay và tránh cầu thang.
+2. Tạo trip → Áp dụng sở thích cá nhân. Xác nhận các lựa chọn đã điền.
+3. Đổi chế độ ăn của riêng trip sang ăn chay, kiểm tra và lưu.
+4. Sửa profile sang sở thích khác, mở lại trip: snapshot và lựa chọn riêng phải giữ nguyên.
+5. Mở hai tab; áp dụng profile trong tab trip rồi sửa profile ở tab kia trước khi lưu trip: lưu trip phải báo profile đã thay đổi. Bấm áp dụng lại nếu muốn dùng bản mới.
+
+Dietary discovery chỉ hiện địa điểm ăn uống có evidence phù hợp; catalog chưa có dữ liệu thật sẽ tiếp tục hiện trạng thái trống.

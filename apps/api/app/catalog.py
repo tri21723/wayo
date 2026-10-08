@@ -10,17 +10,19 @@ from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.orm import Session
 
 from app.models import Place
-from app.profiles import Interest
 from app.schemas import Contract, Text
+from app.taste import Interest
 
 Slug = Annotated[str, StringConstraints(pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$", max_length=100)]
-EvidenceField = Literal["identity", "coordinates", "tags", "access", "price", "hours", "duration"]
+EvidenceField = Literal[
+    "identity", "coordinates", "tags", "access", "price", "hours", "duration", "diet"
+]
 
 
 class Evidence(Contract):
     url: HttpUrl
     checked_at: AwareDatetime
-    fields: list[EvidenceField] = Field(min_length=1, max_length=7)
+    fields: list[EvidenceField] = Field(min_length=1, max_length=8)
     note: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=1000)]
 
     @model_validator(mode="after")
@@ -74,6 +76,8 @@ class PlaceRecord(Contract):
     stairs: bool | None = Field(default=None, strict=True)
     alcohol: bool | None = Field(default=None, strict=True)
     crowd: Literal["quiet", "moderate", "busy"] | None = None
+    effort: Literal["easy", "moderate", "challenging"] | None = None
+    dietary_options: list[Literal["vegetarian", "vegan"]] | None = Field(default=None, max_length=2)
     price: Price | None = None
     duration_minutes: int | None = Field(default=None, ge=5, le=720, strict=True)
     hours: list[OpeningWindow] | None = Field(default=None, max_length=28)
@@ -86,9 +90,14 @@ class PlaceRecord(Contract):
         covered = {field for source in self.sources for field in source.fields}
         required = {"identity", "coordinates", "tags"}
         if any(
-            value is not None for value in (self.trekking, self.stairs, self.alcohol, self.crowd)
+            value is not None
+            for value in (self.trekking, self.stairs, self.alcohol, self.crowd, self.effort)
         ):
             required.add("access")
+        if self.dietary_options is not None:
+            if len(self.dietary_options) != len(set(self.dietary_options)):
+                raise ValueError("Duplicate dietary options.")
+            required.add("diet")
         for field in ("price", "hours", "duration"):
             value = self.duration_minutes if field == "duration" else getattr(self, field)
             if value is not None:

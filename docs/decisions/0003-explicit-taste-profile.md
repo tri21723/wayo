@@ -1,5 +1,7 @@
 # ADR 0003 — Sở thích cá nhân có phiên bản
 
+Cập nhật: phần snapshot/override và discovery dùng sở thích được bổ sung trong [ADR 0005](0005-trip-taste-snapshot.md).
+
 Ngày: 2026-10-07. Trạng thái: accepted cho phần lưu profile alpha.
 
 - `/profile` có sáu nhóm câu hỏi, lưu và sửa lại sau đăng nhập. Có thể bỏ qua onboarding bằng cách tiếp tục tạo trip; chưa có wizard từng bước hoặc đo completion/drop-off.

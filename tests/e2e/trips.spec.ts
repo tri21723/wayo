@@ -387,3 +387,168 @@ test("discovery handles empty catalog, errors, sources and stale trip revisions"
     page.getByRole("heading", { name: "Synthetic cafe fixture" }),
   ).toHaveCount(0);
 });
+
+test("apply profile, override trip diet and keep snapshot after profile changes", async ({
+  page,
+}) => {
+  await mockAuth(page);
+  const answers = {
+    interests: ["nature", "nightlife"],
+    pace: "active",
+    crowd: "quiet",
+    adventure: "easy",
+    diet: "vegan",
+    exclusions: ["stairs", "alcohol"],
+  };
+  let profile = { revision: 1, schema_version: 1, answers };
+  let saved: Record<string, unknown> | null = null;
+  let updateCount = 0;
+  await page.route("**/api/profile", async (route) => {
+    expect(route.request().method()).toBe("GET");
+    await route.fulfill({ json: profile });
+  });
+  await page.route("**/api/trips**", async (route) => {
+    const request = route.request();
+    const path = new URL(request.url()).pathname;
+    if (path.endsWith("/validate"))
+      return route.fulfill({
+        json: {
+          status: "input_valid",
+          trip_days: 3,
+          total_budget_vnd: 8000000,
+          notices: [],
+          trip: request.postDataJSON(),
+        },
+      });
+    if (request.method() === "POST" || request.method() === "PUT") {
+      const input = request.postDataJSON();
+      expect(input.trip.taste_snapshot).toEqual({
+        schema_version: 1,
+        profile_revision: 1,
+        answers,
+      });
+      expect(input.trip.diet).toBe("vegetarian");
+      expect(input.trip.preferences).toEqual([
+        "Thiên nhiên",
+        "Hoạt động buổi tối",
+      ]);
+      expect(input.trip.exclusions).toEqual(["Cầu thang", "Rượu bia"]);
+      expect(input.trip.crowd).toBe("quiet");
+      if (request.method() === "PUT") {
+        expect(input.expected_revision).toBe(1);
+        updateCount += 1;
+      }
+      saved = {
+        id: tripId,
+        title: input.title,
+        trip: input.trip,
+        revision: updateCount + 1,
+        created_at: "2026-10-01T00:00:00Z",
+        updated_at: "2026-10-01T00:00:00Z",
+      };
+      return route.fulfill({
+        status: request.method() === "POST" ? 201 : 200,
+        json: saved,
+      });
+    }
+    return route.fulfill({
+      json: path.endsWith(tripId)
+        ? saved
+        : {
+            items: saved ? [saved] : [],
+            total: saved ? 1 : 0,
+            offset: 0,
+            limit: 20,
+          },
+    });
+  });
+  await signIn(page);
+  await page.goto("/");
+  await page.getByLabel("Đến Đà Lạt lúc").fill("2026-11-06T12:00");
+  await page.getByLabel("Rời Đà Lạt lúc").fill("2026-11-08T17:00");
+  await page.getByRole("button", { name: "Áp dụng sở thích cá nhân" }).click();
+  await expect(page.getByLabel("Chế độ ăn cho chuyến đi")).toHaveValue("vegan");
+  await expect(
+    page.getByRole("combobox", { name: "Nhịp đi", exact: true }),
+  ).toHaveValue("active");
+  await expect(
+    page.getByRole("button", { name: "Cầu thang", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await page.getByLabel("Chế độ ăn cho chuyến đi").selectOption("vegetarian");
+  await page
+    .getByRole("button", { name: "Kiểm tra thông tin chuyến đi" })
+    .click();
+  await page
+    .getByRole("button", { name: "Lưu chuyến đi", exact: true })
+    .click();
+  await page.getByRole("link", { name: "Mở bản đã lưu →" }).click();
+  await expect(page).toHaveURL(new RegExp(`/trips/${tripId}$`));
+  profile = {
+    ...profile,
+    revision: 2,
+    answers: { ...answers, diet: "unrestricted" },
+  };
+  await page.reload();
+  await expect(page.getByLabel("Chế độ ăn cho chuyến đi")).toHaveValue(
+    "vegetarian",
+  );
+  await expect(
+    page.getByText(/Đã lấy từ hồ sơ sở thích phiên bản 1/),
+  ).toBeVisible();
+  await page.getByLabel("Tên chuyến đi").fill("Giữ gu riêng của trip");
+  await page
+    .getByRole("button", { name: "Kiểm tra thông tin chuyến đi" })
+    .click();
+  await page.getByRole("button", { name: "Lưu thay đổi" }).click();
+  await expect(page.getByText("Đã lưu thay đổi chuyến đi.")).toBeVisible();
+  expect(updateCount).toBe(1);
+  expect(profile.answers.diet).toBe("unrestricted");
+});
+
+test("late profile response after sign out cannot populate a guest draft", async ({
+  page,
+}) => {
+  await mockAuth(page);
+  await page.route("**/api/trips?**", (route) =>
+    route.fulfill({ json: { items: [], total: 0, offset: 0, limit: 20 } }),
+  );
+  let release: () => void = () => {};
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let started: () => void = () => {};
+  const requested = new Promise<void>((resolve) => {
+    started = resolve;
+  });
+  await page.route("**/api/profile", async (route) => {
+    started();
+    await gate;
+    await route.fulfill({
+      json: {
+        revision: 1,
+        answers: {
+          interests: ["nature"],
+          pace: "active",
+          crowd: "quiet",
+          adventure: "easy",
+          diet: "vegan",
+          exclusions: ["stairs"],
+        },
+      },
+    });
+  });
+  await signIn(page);
+  await page.goto("/");
+  await page.getByRole("button", { name: "Áp dụng sở thích cá nhân" }).click();
+  await requested;
+  await page.getByRole("button", { name: "Đăng xuất", exact: true }).click();
+  await expect(
+    page.getByRole("link", { name: "Đăng nhập", exact: true }),
+  ).toBeVisible();
+  release();
+  await expect(page.getByLabel("Chế độ ăn cho chuyến đi")).toBeEnabled();
+  await expect(page.getByLabel("Chế độ ăn cho chuyến đi")).toHaveValue(
+    "unrestricted",
+  );
+  await expect(page.getByText(/Đã lấy từ hồ sơ sở thích/)).toHaveCount(0);
+});

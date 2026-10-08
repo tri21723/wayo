@@ -179,7 +179,8 @@ function ProfileForm({
       </fieldset>
       <p>
         Sở thích được lưu vào tài khoản. Các chuyến đi đã tạo giữ nguyên lựa
-        chọn riêng; phần gợi ý địa điểm sẽ được bổ sung sau.
+        chọn riêng; Bạn có thể áp dụng sở thích vào bản nháp chuyến đi bằng nút
+        “Áp dụng sở thích cá nhân”.
       </p>
       {error && (
         <div role="alert" className="message error">

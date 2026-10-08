@@ -904,11 +904,12 @@
                 "access",
                 "price",
                 "hours",
-                "duration"
+                "duration",
+                "diet"
               ]
             },
             "type": "array",
-            "maxItems": 7,
+            "maxItems": 8,
             "minItems": 1,
             "title": "Fields"
           },
@@ -1172,6 +1173,41 @@
             ],
             "title": "Crowd"
           },
+          "effort": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "easy",
+                  "moderate",
+                  "challenging"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effort"
+          },
+          "dietary_options": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "vegetarian",
+                    "vegan"
+                  ]
+                },
+                "type": "array",
+                "maxItems": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dietary Options"
+          },
           "price": {
             "anyOf": [
               {
@@ -1294,7 +1330,7 @@
           "algorithm_version": {
             "type": "string",
             "title": "Algorithm Version",
-            "default": "saved-trip-tags-v1"
+            "default": "saved-trip-taste-v2"
           },
           "items": {
             "items": {
@@ -1419,6 +1455,13 @@
             "type": "array",
             "title": "Matched Interests"
           },
+          "matched_context": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Matched Context"
+          },
           "reasons": {
             "items": {
               "type": "string"
@@ -1439,6 +1482,7 @@
         "required": [
           "place",
           "matched_interests",
+          "matched_context",
           "reasons",
           "warnings"
         ],
@@ -1524,6 +1568,31 @@
           "exclusions"
         ],
         "title": "TasteAnswers"
+      },
+      "TasteSnapshot": {
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1,
+            "title": "Schema Version",
+            "default": 1
+          },
+          "profile_revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Profile Revision"
+          },
+          "answers": {
+            "$ref": "#/components/schemas/TasteAnswers"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "profile_revision",
+          "answers"
+        ],
+        "title": "TasteSnapshot"
       },
       "TripCreate": {
         "properties": {
@@ -1639,6 +1708,52 @@
           "pace": {
             "$ref": "#/components/schemas/Pace",
             "default": "relaxed"
+          },
+          "taste_snapshot": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TasteSnapshot"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "diet": {
+            "type": "string",
+            "enum": [
+              "unrestricted",
+              "vegetarian",
+              "vegan"
+            ],
+            "title": "Diet",
+            "default": "unrestricted"
+          },
+          "crowd": {
+            "type": "string",
+            "enum": [
+              "quiet",
+              "neutral",
+              "lively"
+            ],
+            "title": "Crowd",
+            "default": "neutral"
+          },
+          "adventure": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "easy",
+                  "moderate",
+                  "challenging"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Adventure"
           },
           "anchor": {
             "anyOf": [

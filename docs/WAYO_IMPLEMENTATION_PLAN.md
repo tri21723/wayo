@@ -194,13 +194,13 @@ Nghiệm thu: mọi POI được planner chọn có ID tồn tại, tọa độ 
 
 ### E04 — Taste profile và trip setup · W3 · FE + BE
 
-Cập nhật 2026-10-07: đã có `/profile`, GET/PUT private, sáu nhóm câu hỏi và vector version 1. TASTE-01/03 còn wizard và trip snapshot/override; ranking chưa dùng profile. Xem `docs/decisions/0003-explicit-taste-profile.md`.
+Cập nhật 2026-10-07: đã có `/profile`, GET/PUT private, sáu nhóm câu hỏi và vector version 1. TASTE-03 đã có snapshot/override tường minh; discovery dùng lựa chọn hiệu lực của trip. TASTE-01 còn wizard. Xem `docs/decisions/0003-explicit-taste-profile.md`.
 
 Phụ thuộc: BASE-05, DB-01, PROD-03.
 
 - [ ] **TASTE-01 · P0** Onboarding 6–10 tương tác, progress/back/skip; hoàn thành rồi sửa lại được, không ép điền mọi sở thích.
 - [x] **TASTE-02 · P0** Mapping câu trả lời → taste vector có bounds/defaults và schema version; loại trừ trekking/dietary/accessibility tách khỏi điểm sở thích mềm.
-- [ ] **TASTE-03 · P0** Profile API/UI; trip có snapshot và override để sửa trip không vô tình sửa profile gốc.
+- [x] **TASTE-03 · P0** Profile API/UI; trip có snapshot và override để sửa trip không vô tình sửa profile gốc.
 - [ ] **TASTE-04 · P0** Trip setup validate ngày giờ, số người, budget scope, mode, anchor, fixed events và thời gian nghỉ; form tiếng Việt rõ đơn vị.
 - [ ] **TASTE-05 · P1** Kiểm tra onboarding với người dùng thử; ghi completion/time/drop-off và điều chỉnh câu hỏi gây nhầm.
 
@@ -208,7 +208,7 @@ Nghiệm thu: cùng input tạo vector nhất quán; exclusion không bị ranke
 
 ### E05 — Retrieval và ranking · W3–W4 · BE + DATA
 
-Cập nhật 2026-10-07: có catalog/importer, lọc verified/fresh/exclusions, tag ranking deterministic và UI discovery. Chưa có POI thật, profile snapshot, group/distance/time/season scoring hoặc planner. Xem ADR 0004; các task dưới đây chưa đủ acceptance toàn bộ.
+Cập nhật 2026-10-07: có catalog/importer, lọc verified/fresh/exclusions, tag ranking deterministic và UI discovery. Đã có snapshot/override profile và dietary/context matching. Chưa có POI thật, group/distance/time/season scoring hoặc planner. Xem ADR 0004; các task dưới đây chưa đủ acceptance toàn bộ.
 
 Phụ thuộc: DATA-03, TASTE-02, TASTE-04.
 

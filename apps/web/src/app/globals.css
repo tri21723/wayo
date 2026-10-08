@@ -473,3 +473,20 @@ button:disabled {
 .place-card details {
   overflow-wrap: anywhere;
 }
+
+.profile-import {
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+}
+.profile-import h3 {
+  margin-top: 0;
+}
+.profile-import button {
+  padding: 0.7rem 1rem;
+  border: 1px solid var(--green);
+  border-radius: 8px;
+  background: white;
+  color: var(--green);
+}

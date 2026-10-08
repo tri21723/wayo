@@ -13,8 +13,9 @@ from sqlalchemy.exc import IntegrityError
 from app.auth import UserId
 from app.database import Database
 from app.errors import api_error
-from app.models import Trip, User
-from app.schemas import ApiError, SavedTrip, TripCreate, TripList, TripUpdate
+from app.models import TravelProfile, Trip, User
+from app.schemas import ApiError, SavedTrip, TripCreate, TripList, TripRequest, TripUpdate
+from app.taste import TasteAnswers
 
 router = APIRouter(
     prefix="/v1/trips",
@@ -45,6 +46,44 @@ def owned(session: Database, user_id: UUID, trip_id: UUID) -> Trip:
     return row
 
 
+def verify_snapshot(
+    session: Database, user_id: UUID, trip: TripRequest, previous: dict | None = None
+):
+    snapshot = trip.taste_snapshot
+    if snapshot is None:
+        return
+    if previous and snapshot.model_dump(mode="json") == previous.get("taste_snapshot"):
+        return  # Existing snapshot survives later profile edits.
+    profile = session.scalar(
+        select(TravelProfile).where(TravelProfile.owner_id == user_id).with_for_update()
+    )
+    if (
+        profile is None
+        or profile.revision != snapshot.profile_revision
+        or TasteAnswers.model_validate(profile.answers) != snapshot.answers
+    ):
+        raise api_error(
+            409,
+            "PROFILE_CHANGED",
+            "Sở thích cá nhân đã thay đổi hoặc chưa được lưu. "
+            "Hãy áp dụng lại sở thích trước khi lưu chuyến đi.",
+        )
+
+
+def create_digest(payload: TripCreate) -> str:
+    data = payload.model_dump(mode="json", exclude={"request_id"})
+    # Preserve hashes of pre-snapshot create requests for retries after deployment.
+    for key, default in {
+        "taste_snapshot": None,
+        "diet": "unrestricted",
+        "crowd": "neutral",
+        "adventure": None,
+    }.items():
+        if data["trip"].get(key) == default:
+            data["trip"].pop(key, None)
+    return hashlib.sha256(json.dumps(data, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+
+
 @router.post(
     "",
     response_model=SavedTrip,
@@ -53,13 +92,7 @@ def owned(session: Database, user_id: UUID, trip_id: UUID) -> Trip:
     responses={200: {"model": SavedTrip, "description": "Previously created request replay"}},
 )
 def create_trip(payload: TripCreate, response: Response, user_id: UserId, session: Database):
-    digest = hashlib.sha256(
-        json.dumps(
-            payload.model_dump(mode="json", exclude={"request_id"}),
-            sort_keys=True,
-            ensure_ascii=False,
-        ).encode()
-    ).hexdigest()
+    digest = create_digest(payload)
 
     def previous_request():
         return session.scalar(
@@ -74,6 +107,7 @@ def create_trip(payload: TripCreate, response: Response, user_id: UserId, sessio
 
     if previous := previous_request():
         return replay(previous)
+    verify_snapshot(session, user_id, payload.trip)
     now = datetime.now(UTC)
     dialect_insert = sqlite_insert if session.bind.dialect.name == "sqlite" else pg_insert
     session.execute(
@@ -127,7 +161,14 @@ def get_trip(trip_id: UUID, user_id: UserId, session: Database):
 
 @router.put("/{trip_id}", response_model=SavedTrip, operation_id="updateTrip")
 def update_trip(trip_id: UUID, payload: TripUpdate, user_id: UserId, session: Database):
-    owned(session, user_id, trip_id)
+    previous = owned(session, user_id, trip_id)
+    # Older clients do not know these additive fields; omission must not erase constraints.
+    merged = payload.trip.model_dump(mode="json")
+    for key in ("taste_snapshot", "diet", "crowd", "adventure"):
+        if key not in payload.trip.model_fields_set and key in previous.trip_data:
+            merged[key] = previous.trip_data[key]
+    trip = TripRequest.model_validate(merged)
+    verify_snapshot(session, user_id, trip, previous.trip_data)
     result = session.execute(
         update(Trip)
         .where(
@@ -135,7 +176,7 @@ def update_trip(trip_id: UUID, payload: TripUpdate, user_id: UserId, session: Da
         )
         .values(
             title=payload.title,
-            trip_data=payload.trip.model_dump(mode="json"),
+            trip_data=trip.model_dump(mode="json"),
             revision=Trip.revision + 1,
             updated_at=datetime.now(UTC),
         )

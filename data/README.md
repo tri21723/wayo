@@ -32,6 +32,10 @@ Chạy từ thư mục repo:
 PYTHONPATH=apps/api .venv/bin/python -c 'import json; from app.catalog import CatalogBatch; print(json.dumps(CatalogBatch.model_json_schema(), ensure_ascii=False, indent=2))' > /tmp/wayo-catalog.schema.json
 ```
 
-Không dùng giá 0 hoặc access false để thay thế dữ liệu chưa biết: dùng null. `hours` là các khung `{weekday, opens, closes}`, Monday=0, giờ địa phương Việt Nam. Mỗi source có `{url, checked_at, fields, note}`; fields thuộc identity/coordinates/tags/access/price/hours/duration. Verified đòi nguồn cho mọi nhóm thông tin đã điền.
+Không dùng giá 0 hoặc access false để thay thế dữ liệu chưa biết: dùng null. `hours` là các khung `{weekday, opens, closes}`, Monday=0, giờ địa phương Việt Nam. Mỗi source có `{url, checked_at, fields, note}`; fields thuộc identity/coordinates/tags/access/price/hours/duration/diet. Verified đòi nguồn cho mọi nhóm thông tin đã điền.
 
 Validator không kiểm chứng sự thật của trang nguồn. Không thể đổi sang verified chỉ vì file qua validation. Quy định chi tiết và giới hạn discovery: [ADR 0004](../docs/decisions/0004-curated-discovery.md).
+
+## Chế độ ăn và mức vận động
+
+Catalog hỗ trợ thêm `dietary_options: ["vegetarian", "vegan"]` (chỉ ghi các lựa chọn có thật) và `effort: "easy" | "moderate" | "challenging"`. Cả hai có thể null khi chưa biết. Verified có dietary_options cần source field `diet`; effort cần source field `access`. Không tự suy diễn chế độ ăn từ tên món/địa điểm. Discovery dùng thông tin này theo [ADR 0005](../docs/decisions/0005-trip-taste-snapshot.md).

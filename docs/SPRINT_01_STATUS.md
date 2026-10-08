@@ -16,7 +16,7 @@ Cập nhật: 07/10/2026. Đã có code cho auth và storage bản nháp; đã k
 | BASE-04  | REVIEW     | Supabase client + JWT verification + owner isolation; user đã xác nhận auth chạy đúng trên Supabase thật; admin authorization chưa có |
 | BASE-05  | REVIEW     | Trip create/list/get/update/delete và UI đã implement; user đã xác nhận test local với Supabase thật thành công; staging chưa có      |
 | BASE-06  | DOING      | CI bổ sung PostgreSQL và Playwright; chưa xác minh run mới trên GitHub, chưa deploy                                                   |
-| DB-01    | DOING      | ERD/migrations users/trips có thật; profiles và catalog JSON đã có; schema chuẩn hóa destinations/tags/sources/hours còn thiếu                                    |
+| DB-01    | DOING      | ERD/migrations users/trips có thật; profiles và catalog JSON đã có; schema chuẩn hóa destinations/tags/sources/hours còn thiếu        |
 | DB-02/05 | TODO       | Revision trip draft không thay thế immutable itinerary version history/undo                                                           |
 | TASTE-04 | DOING      | Form và validation có thể lưu; chưa anchor picker/fixed-event editor                                                                  |
 | DATA-01  | DOING      | Capture template; chưa chọn nguồn và curate POI                                                                                       |
@@ -53,7 +53,7 @@ Không có mock identity/auth bypass trong code runtime. Tests ký token riêng 
 
 1. Nghiệm thu trang sở thích với tài khoản thật; triển khai staging.
 2. DB-01 tiếp: destinations/places/evidence; DATA-01/03 curate POI có nguồn.
-3. Snapshot/override taste cho trip, hoàn thiện onboarding và ranking baseline.
+3. Hoàn thiện onboarding wizard, curate POI thật và ranking group/time/distance.
 4. Itinerary schema/versioning + constraint planner + route provider.
 
 ## Đợt tiếp theo — Sở thích cá nhân (2026-10-07)
@@ -63,7 +63,7 @@ Không có mock identity/auth bypass trong code runtime. Tests ký token riêng 
 - [x] Migration 0002 đã áp dụng Supabase thật; bảng profile có RLS, browser roles không truy cập trực tiếp; Alembic không có schema drift. Test nâng từ 0001 giữ nguyên trip.
 - [x] API tests cho persistence, isolation, validation, conflict và migration trên SQLite/PostgreSQL.
 - [ ] Người dùng nghiệm thu profile trên Supabase thật.
-- [ ] Wizard progress/back, trip snapshot/override và đánh giá onboarding với người dùng.
+- [ ] Wizard progress/back và đánh giá onboarding với người dùng; snapshot/override đã hoàn tất ở đợt sau.
 - [ ] Catalog POI có nguồn, importer và deterministic ranking.
 
 Chi tiết quyết định: [ADR profile](decisions/0003-explicit-taste-profile.md). Các mục TASTE-01/03 chưa hoàn tất toàn bộ acceptance trong plan.
@@ -80,8 +80,21 @@ Browser tests trên production build: **3/3 đạt**, gồm Trip CRUD, retry kh�
 - [x] Thứ tự deterministic theo số sở thích khớp, tie-break slug, tối đa hai địa điểm mỗi category.
 - [x] UI gợi ý, nguồn, thiếu dữ liệu, lỗi/retry và phát hiện trip revision đã đổi.
 - [ ] Curate 30–50 POI thật có nguồn (DATA-03); hiện catalog trống.
-- [ ] Admin review/audit, schema chuẩn hóa đầy đủ, trip taste snapshot và ranker group/distance/time/season.
+- [ ] Admin review/audit, schema chuẩn hóa đầy đủ và ranker group/distance/time/season.
 
 Đây là phần đầu của DB-01, DATA-02 và E05; chưa đánh dấu toàn bộ các task hoàn tất. Chi tiết: [ADR catalog](decisions/0004-curated-discovery.md), [hướng dẫn import](../data/README.md).
 
 Kiểm chứng catalog: 64 test API qua trên SQLite/PostgreSQL, thêm test nâng migration giữ nguyên profile/trip qua cả hai database. 4/4 browser flows trên production đạt. Ruff, lint, typecheck, format và production build đạt. Migration 0003 đã áp dụng Supabase thật: không schema drift, cả bốn bảng có RLS, browser roles không có schema access. Không nhập fixture hay POI chưa xác minh vào Supabase.
+
+## Snapshot sở thích theo chuyến đi (2026-10-07)
+
+- [x] Áp dụng profile vào form tạo/sửa trip; lưu snapshot answers + revision nguồn.
+- [x] Chỉnh preferences/exclusions/pace/diet/crowd/adventure riêng cho trip, không ghi profile.
+- [x] Xác minh nguồn snapshot theo owner và revision; giữ snapshot cũ sau khi profile thay đổi.
+- [x] Tương thích trip/hash tạo cũ, bảo toàn trường mới khi editor cũ không gửi.
+- [x] Discovery v2 lọc dietary có evidence, ưu tiên crowd/effort theo sở thích, không nới exclusions.
+- [ ] Nghiệm thu luồng áp dụng profile với tài khoản Supabase thật.
+
+Không cần migration hoặc biến môi trường mới. TASTE-03 hoàn tất phần API/UI snapshot và override; wizard onboarding và dữ liệu POI thật vẫn còn. Chi tiết: [ADR 0005](decisions/0005-trip-taste-snapshot.md).
+
+Kiểm chứng snapshot hoàn tất ngày 2026-10-08: 70 test API đã qua trên SQLite và PostgreSQL; bộ snapshot được chạy lại sau chỉnh sửa tương thích editor cũ và đạt trên cả hai. Cả 6 browser flows đã đạt (5 ở lượt chung, test apply/override chạy lại đạt sau sửa selector combobox). Production build, lint, typecheck, Ruff và format đạt. Tests trình duyệt dùng Auth/API mock, chưa thay thế nghiệm thu Supabase thật.

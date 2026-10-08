@@ -47,13 +47,14 @@ LABELS = {
 class SuggestedPlace(Contract):
     place: PlaceRecord
     matched_interests: list[str]
+    matched_context: list[str]
     reasons: list[str]
     warnings: list[str]
 
 
 class Recommendations(Contract):
     trip_revision: int
-    algorithm_version: str = "saved-trip-tags-v1"
+    algorithm_version: str = "saved-trip-taste-v2"
     items: list[SuggestedPlace]
     notices: list[InputNotice]
 
@@ -68,7 +69,8 @@ def rank_places(trip: TripRequest, places: list[PlaceRecord], limit: int):
         InputNotice(
             code="DISCOVERY_ONLY",
             message=(
-                "Dựa trên bản chuyến đi đã lưu, chưa dùng profile cá nhân. Đây là gợi ý khám phá; "
+                "Dựa trên sở thích và điều chỉnh riêng trong bản chuyến đi đã lưu. "
+                "Đây là gợi ý khám phá; "
                 "chưa kiểm tra giờ mở cửa theo ngày đi, tuyến đường, lịch trình hoặc tổng chi phí."
             ),
         )
@@ -122,6 +124,13 @@ def rank_places(trip: TripRequest, places: list[PlaceRecord], limit: int):
             for key in restrictions
         ):
             continue
+        serves_food = place.category in ("food", "cafe") or "food" in place.tags
+        if trip.diet != "unrestricted" and serves_food:
+            options = set(place.dietary_options or [])
+            if "vegan" in options:
+                options.add("vegetarian")
+            if trip.diet not in options:
+                continue
         if trip.budget.mode == "hard":
             # Screening one activity against whole-trip cap is necessary but not sufficient.
             if place.price is None:
@@ -132,6 +141,13 @@ def rank_places(trip: TripRequest, places: list[PlaceRecord], limit: int):
             if activity_cost > total_budget:
                 continue
         matches = sorted(set(place.tags) & interests)
+        context = []
+        if (trip.crowd == "quiet" and place.crowd == "quiet") or (
+            trip.crowd == "lively" and place.crowd == "busy"
+        ):
+            context.append("Không khí phù hợp lựa chọn của bạn.")
+        if trip.adventure is not None and trip.adventure == place.effort:
+            context.append("Mức vận động phù hợp lựa chọn của bạn.")
         warnings = ["Chưa kiểm tra lịch mở cửa thực tế cho thời gian chuyến đi."]
         if place.hours is None:
             warnings.append("Chưa có giờ mở cửa được xác minh.")
@@ -146,14 +162,23 @@ def rank_places(trip: TripRequest, places: list[PlaceRecord], limit: int):
             if matches
             else ["Địa điểm để khám phá thêm, chưa trùng sở thích đã chọn."]
         )
+        reasons.extend(context)
+        if trip.diet != "unrestricted" and serves_food:
+            reasons.append("Có lựa chọn ăn chay phù hợp chế độ ăn đã chọn, theo nguồn đã kiểm tra.")
         if restrictions:
             reasons.append("Có dữ liệu đáp ứng các điều cần tránh đã hỗ trợ.")
         candidates.append(
             SuggestedPlace(
-                place=place, matched_interests=matches, reasons=reasons, warnings=warnings
+                place=place,
+                matched_interests=matches,
+                matched_context=context,
+                reasons=reasons,
+                warnings=warnings,
             )
         )
-    candidates.sort(key=lambda item: (-len(item.matched_interests), item.place.slug))
+    candidates.sort(
+        key=lambda item: (-len(item.matched_interests), -len(item.matched_context), item.place.slug)
+    )
     counts: dict[str, int] = {}
     selected = []
     for candidate in candidates:

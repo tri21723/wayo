@@ -6,6 +6,8 @@ from zoneinfo import ZoneInfo
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
+from app.taste import TasteAnswers
+
 Text = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=120)]
 Vietnam = ZoneInfo("Asia/Ho_Chi_Minh")
 
@@ -45,6 +47,12 @@ class Pace(StrEnum):
     ACTIVE = "active"
 
 
+class TasteSnapshot(Contract):
+    schema_version: Literal[1] = 1
+    profile_revision: int = Field(ge=1, strict=True)
+    answers: TasteAnswers
+
+
 class TripRequest(Contract):
     destination_id: Literal["da-lat"] = "da-lat"
     origin: Text
@@ -57,6 +65,10 @@ class TripRequest(Contract):
     # Driving is provisional until the routing integration is evaluated.
     transport_mode: Literal["driving"] = "driving"
     pace: Pace = Pace.RELAXED
+    taste_snapshot: TasteSnapshot | None = None
+    diet: Literal["unrestricted", "vegetarian", "vegan"] = "unrestricted"
+    crowd: Literal["quiet", "neutral", "lively"] = "neutral"
+    adventure: Literal["easy", "moderate", "challenging"] | None = None
     anchor: Anchor | None = None
     preferences: list[Text] = Field(default_factory=list, max_length=20)
     exclusions: list[Text] = Field(default_factory=list, max_length=20)

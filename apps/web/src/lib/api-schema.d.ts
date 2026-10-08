@@ -181,7 +181,7 @@ export interface components {
              */
             checked_at: string;
             /** Fields */
-            fields: ("identity" | "coordinates" | "tags" | "access" | "price" | "hours" | "duration")[];
+            fields: ("identity" | "coordinates" | "tags" | "access" | "price" | "hours" | "duration" | "diet")[];
             /** Note */
             note: string;
         };
@@ -290,6 +290,10 @@ export interface components {
             alcohol?: boolean | null;
             /** Crowd */
             crowd?: ("quiet" | "moderate" | "busy") | null;
+            /** Effort */
+            effort?: ("easy" | "moderate" | "challenging") | null;
+            /** Dietary Options */
+            dietary_options?: ("vegetarian" | "vegan")[] | null;
             price?: components["schemas"]["Price"] | null;
             /** Duration Minutes */
             duration_minutes?: number | null;
@@ -322,7 +326,7 @@ export interface components {
             trip_revision: number;
             /**
              * Algorithm Version
-             * @default saved-trip-tags-v1
+             * @default saved-trip-taste-v2
              */
             algorithm_version: string;
             /** Items */
@@ -379,6 +383,8 @@ export interface components {
             place: components["schemas"]["PlaceRecord"];
             /** Matched Interests */
             matched_interests: string[];
+            /** Matched Context */
+            matched_context: string[];
             /** Reasons */
             reasons: string[];
             /** Warnings */
@@ -410,6 +416,18 @@ export interface components {
             diet: "unrestricted" | "vegetarian" | "vegan";
             /** Exclusions */
             exclusions: ("trekking" | "stairs" | "alcohol")[];
+        };
+        /** TasteSnapshot */
+        TasteSnapshot: {
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            schema_version: 1;
+            /** Profile Revision */
+            profile_revision: number;
+            answers: components["schemas"]["TasteAnswers"];
         };
         /** TripCreate */
         TripCreate: {
@@ -475,6 +493,21 @@ export interface components {
             transport_mode: "driving";
             /** @default relaxed */
             pace: components["schemas"]["Pace"];
+            taste_snapshot?: components["schemas"]["TasteSnapshot"] | null;
+            /**
+             * Diet
+             * @default unrestricted
+             * @enum {string}
+             */
+            diet: "unrestricted" | "vegetarian" | "vegan";
+            /**
+             * Crowd
+             * @default neutral
+             * @enum {string}
+             */
+            crowd: "quiet" | "neutral" | "lively";
+            /** Adventure */
+            adventure?: ("easy" | "moderate" | "challenging") | null;
             anchor?: components["schemas"]["Anchor"] | null;
             /** Preferences */
             preferences?: string[];

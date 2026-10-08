@@ -1,5 +1,7 @@
 # ADR 0004 — Catalog có nguồn và gợi ý từ bản trip đã lưu
 
+Cập nhật: phần snapshot/override và discovery dùng sở thích được bổ sung trong [ADR 0005](0005-trip-taste-snapshot.md).
+
 Ngày: 2026-10-07. Trạng thái: accepted cho discovery baseline, chưa phải planner.
 
 ## Lưu trữ và dữ liệu

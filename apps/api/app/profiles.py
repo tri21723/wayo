@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from typing import Literal
 
 from fastapi import APIRouter
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
@@ -14,32 +14,7 @@ from app.database import Database
 from app.errors import api_error
 from app.models import TravelProfile, User
 from app.schemas import ApiError
-
-Interest = Literal["cafe", "nature", "photography", "food", "culture", "nightlife"]
-INTERESTS = ("cafe", "nature", "photography", "food", "culture", "nightlife")
-
-
-class TasteAnswers(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    interests: list[Interest] = Field(min_length=1, max_length=6)
-    pace: Literal["relaxed", "balanced", "active"]
-    crowd: Literal["quiet", "neutral", "lively"]
-    adventure: Literal["easy", "moderate", "challenging"]
-    diet: Literal["unrestricted", "vegetarian", "vegan"]
-    exclusions: list[Literal["trekking", "stairs", "alcohol"]] = Field(max_length=3)
-
-    @field_validator("interests", "exclusions")
-    @classmethod
-    def unique_values(cls, values):
-        if len(values) != len(set(values)):
-            raise ValueError("Không chọn trùng một lựa chọn.")
-        return sorted(values)
-
-
-def taste_vector(answers: TasteAnswers) -> dict[str, float]:
-    # Fixed bounds, no inference about unselected interests or hard constraints.
-    return {key: 1.0 if key in answers.interests else 0.0 for key in INTERESTS}
+from app.taste import TasteAnswers, taste_vector
 
 
 class ProfileUpdate(BaseModel):
