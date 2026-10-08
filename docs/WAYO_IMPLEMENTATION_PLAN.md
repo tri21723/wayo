@@ -202,6 +202,7 @@ Phụ thuộc: BASE-05, DB-01, PROD-03.
 - [x] **TASTE-02 · P0** Mapping câu trả lời → taste vector có bounds/defaults và schema version; loại trừ trekking/dietary/accessibility tách khỏi điểm sở thích mềm.
 - [x] **TASTE-03 · P0** Profile API/UI; trip có snapshot và override để sửa trip không vô tình sửa profile gốc.
 - [ ] **TASTE-04 · P0** Trip setup validate ngày giờ, số người, budget scope, mode, anchor, fixed events và thời gian nghỉ; form tiếng Việt rõ đơn vị.
+  - Cập nhật 2026-10-08: đã có UI anchor bằng tọa độ và fixed-event editor, lưu/sửa/xóa; còn map picker, giờ nghỉ và kiểm tra di chuyển.
 - [ ] **TASTE-05 · P1** Kiểm tra onboarding với người dùng thử; ghi completion/time/drop-off và điều chỉnh câu hỏi gây nhầm.
 
 Nghiệm thu: cùng input tạo vector nhất quán; exclusion không bị ranker biến thành sở thích thấp; trip đủ dữ kiện để planner chạy hoặc hỏi đúng phần còn thiếu.

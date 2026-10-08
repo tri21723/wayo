@@ -552,3 +552,142 @@ test("late profile response after sign out cannot populate a guest draft", async
   );
   await expect(page.getByText(/Đã lấy từ hồ sơ sở thích/)).toHaveCount(0);
 });
+
+test("anchor and fixed events persist, retain remaining rows after removal and can be cleared", async ({
+  page,
+}) => {
+  await mockAuth(page);
+  let saved: Record<string, unknown> | null = null;
+  let lastTrip: Record<string, unknown> | null = null;
+  let revision = 0;
+  await page.route("**/api/trips**", async (route) => {
+    const request = route.request();
+    const path = new URL(request.url()).pathname;
+    if (path.endsWith("/validate")) {
+      lastTrip = request.postDataJSON();
+      return route.fulfill({
+        json: {
+          status: "input_valid",
+          trip_days: 3,
+          total_budget_vnd: 8000000,
+          notices: [],
+          trip: lastTrip,
+        },
+      });
+    }
+    if (["POST", "PUT"].includes(request.method())) {
+      const input = request.postDataJSON();
+      if (request.method() === "POST")
+        input.trip.fixed_events[0].starts_at = "2026-11-07T09:00:00.123456Z";
+      saved = {
+        id: tripId,
+        title: input.title,
+        trip: input.trip,
+        revision: ++revision,
+        created_at: "2026-10-01T00:00:00Z",
+        updated_at: "2026-10-01T00:00:00Z",
+      };
+      return route.fulfill({
+        status: request.method() === "POST" ? 201 : 200,
+        json: saved,
+      });
+    }
+    return route.fulfill({
+      json: path.endsWith(tripId)
+        ? saved
+        : {
+            items: saved ? [saved] : [],
+            total: saved ? 1 : 0,
+            offset: 0,
+            limit: 20,
+          },
+    });
+  });
+  await signIn(page);
+  await page.goto("/");
+  await page.getByLabel("Đến Đà Lạt lúc").fill("2026-11-06T12:00");
+  await page.getByLabel("Rời Đà Lạt lúc").fill("2026-11-08T17:00");
+  await page.getByLabel("Tôi đã có điểm lưu trú / xuất phát").check();
+  await page
+    .getByLabel("Tên điểm lưu trú / xuất phát", { exact: true })
+    .fill("Khách sạn thử nghiệm");
+  await page.getByLabel("Vĩ độ", { exact: true }).fill("11.94");
+  await page.getByLabel("Kinh độ", { exact: true }).fill("108.44");
+  for (const [index, hour] of [
+    [1, "14"],
+    [2, "16"],
+  ]) {
+    await page.getByRole("button", { name: "+ Thêm sự kiện cố định" }).click();
+    await page
+      .getByLabel(`Tên sự kiện ${index}`, { exact: true })
+      .fill(`Hẹn ${index}`);
+    await page
+      .getByLabel(`Bắt đầu sự kiện ${index}`, { exact: true })
+      .fill(`2026-11-07T${hour}:00`);
+    await page
+      .getByLabel(`Kết thúc sự kiện ${index}`, { exact: true })
+      .fill(`2026-11-07T${hour}:30`);
+  }
+  await page
+    .getByRole("button", { name: "Xóa sự kiện 1", exact: true })
+    .click();
+  await expect(page.getByLabel("Tên sự kiện 1", { exact: true })).toHaveValue(
+    "Hẹn 2",
+  );
+  await page
+    .getByRole("button", { name: "Kiểm tra thông tin chuyến đi" })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Lưu chuyến đi", exact: true }),
+  ).toBeVisible();
+  expect(lastTrip).toMatchObject({
+    anchor: {
+      label: "Khách sạn thử nghiệm",
+      latitude: 11.94,
+      longitude: 108.44,
+    },
+    fixed_events: [
+      {
+        label: "Hẹn 2",
+        starts_at: "2026-11-07T16:00+07:00",
+        ends_at: "2026-11-07T16:30+07:00",
+      },
+    ],
+  });
+  await page
+    .getByRole("button", { name: "Lưu chuyến đi", exact: true })
+    .click();
+  await page.getByRole("link", { name: "Mở bản đã lưu →" }).click();
+  await expect(page).toHaveURL(new RegExp(`/trips/${tripId}$`));
+  await expect(page.getByLabel("Vĩ độ", { exact: true })).toHaveValue("11.94");
+  await expect(page.getByLabel("Tên sự kiện 1", { exact: true })).toHaveValue(
+    "Hẹn 2",
+  );
+  await page
+    .getByRole("button", { name: "Kiểm tra thông tin chuyến đi" })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Lưu thay đổi" }),
+  ).toBeVisible();
+  expect(lastTrip).toMatchObject({
+    fixed_events: [{ starts_at: "2026-11-07T09:00:00.123456Z" }],
+  });
+  await page
+    .getByRole("button", { name: "Xóa sự kiện 1", exact: true })
+    .click();
+  await expect(page.getByRole("button", { name: "Lưu thay đổi" })).toHaveCount(
+    0,
+  );
+  await page.getByLabel("Tôi đã có điểm lưu trú / xuất phát").uncheck();
+  await page
+    .getByRole("button", { name: "Kiểm tra thông tin chuyến đi" })
+    .click();
+  await page.getByRole("button", { name: "Lưu thay đổi" }).click();
+  await expect(page.getByText("Đã lưu thay đổi chuyến đi.")).toBeVisible();
+  expect(lastTrip).toMatchObject({ anchor: null, fixed_events: [] });
+  await page.reload();
+  await expect(
+    page.getByLabel("Tôi đã có điểm lưu trú / xuất phát"),
+  ).not.toBeChecked();
+  await expect(page.getByText("Chưa có sự kiện cố định.")).toBeVisible();
+});

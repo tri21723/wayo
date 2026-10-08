@@ -2,6 +2,10 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
+import {
+  TripConstraints,
+  readConstraints,
+} from "@/components/trip-constraints";
 import { useAuth } from "@/components/auth-provider";
 import {
   createTrip,
@@ -232,8 +236,7 @@ export function TripForm({
       taste_snapshot: snapshotOwner === session?.user.id ? snapshot : null,
       preferences,
       exclusions,
-      fixed_events: initial?.trip.fixed_events ?? [],
-      anchor: initial?.trip.anchor ?? null,
+      ...readConstraints(form, initial?.trip),
     };
     setPending(true);
     setResult(null);
@@ -526,6 +529,14 @@ export function TripForm({
               )}
             </div>
           </fieldset>
+          <TripConstraints
+            initial={initial?.trip}
+            onChange={() => {
+              setResult(null);
+              setError("");
+              if (!initial) setSaved(null);
+            }}
+          />
           <button className="primary" type="submit">
             {pending ? "Đang kiểm tra…" : "Kiểm tra thông tin chuyến đi"}
             <span aria-hidden="true">↗</span>

@@ -490,3 +490,25 @@ button:disabled {
   background: white;
   color: var(--green);
 }
+
+.constraint-group {
+  margin-top: 1rem;
+}
+.anchor-fields {
+  border: 0;
+  padding: 1rem 0 0;
+  min-width: 0;
+}
+.anchor-fields[hidden] {
+  display: none;
+}
+.fixed-event {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 1rem;
+  margin: 1rem 0;
+  min-width: 0;
+}
+.fixed-event legend {
+  padding: 0 0.4rem;
+}

@@ -131,3 +131,13 @@ Browser tests mặc định chạy dev server riêng. Có thể thử production
 5. Mở hai tab; áp dụng profile trong tab trip rồi sửa profile ở tab kia trước khi lưu trip: lưu trip phải báo profile đã thay đổi. Bấm áp dụng lại nếu muốn dùng bản mới.
 
 Dietary discovery chỉ hiện địa điểm ăn uống có evidence phù hợp; catalog chưa có dữ liệu thật sẽ tiếp tục hiện trạng thái trống.
+
+## Nghiệm thu điểm lưu trú và sự kiện cố định
+
+1. Trong form trip, bật **Tôi đã có điểm lưu trú / xuất phát**, nhập tên và tọa độ thập phân của địa điểm.
+2. Chọn **+ Thêm sự kiện cố định**; nhập tên, bắt đầu và kết thúc theo giờ Việt Nam. Mỗi sự kiện cần nằm trong khoảng ngày/giờ trip.
+3. Kiểm tra và lưu; mở lại trip, xác nhận tọa độ và sự kiện giữ nguyên.
+4. Thử tạo hai sự kiện chồng giờ hoặc nằm ngoài trip: API phải báo lỗi, bản đã lưu giữ nguyên.
+5. Xóa một dòng sự kiện, kiểm tra các dòng còn lại không đổi. Bỏ chọn điểm lưu trú, xóa toàn bộ sự kiện, kiểm tra và lưu: lần mở sau phải trống.
+
+Hiện nhập tọa độ thủ công, chưa có tìm địa chỉ trên bản đồ. Sự kiện chỉ giữ thời gian; chưa có địa điểm sự kiện hoặc kiểm tra thời gian di chuyển. Không cần cấu hình dịch vụ mới.

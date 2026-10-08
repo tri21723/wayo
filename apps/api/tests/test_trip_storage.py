@@ -405,3 +405,45 @@ def test_profile_migration_preserves_existing_trips(storage, payload):
     command.upgrade(config, "head")
     assert client.get(f"/v1/trips/{saved['id']}", headers=headers(user)).json() == saved
     assert client.get("/v1/profile", headers=headers(user)).json()["revision"] == 0
+
+
+def test_trip_anchor_and_fixed_events_roundtrip_and_clear(storage, payload):
+    client, _, _ = storage
+    user = uuid4()
+    payload["trip"]["anchor"] = {"label": "Test lodging", "latitude": 11.94, "longitude": 108.44}
+    payload["trip"]["fixed_events"] = [
+        {
+            "label": "Test booking",
+            "starts_at": "2026-11-07T14:00:00.123456+07:00",
+            "ends_at": "2026-11-07T15:00:00+07:00",
+        }
+    ]
+    saved = create(client, user, payload)
+    path = f"/v1/trips/{saved['id']}"
+    assert (
+        client.get(path, headers=headers(user)).json()["trip"]["anchor"]
+        == payload["trip"]["anchor"]
+    )
+    assert saved["trip"]["fixed_events"] == payload["trip"]["fixed_events"]
+    invalid = {**saved["trip"], "fixed_events": saved["trip"]["fixed_events"] * 2}
+    assert (
+        client.put(
+            path,
+            headers=headers(user),
+            json={"title": saved["title"], "expected_revision": 1, "trip": invalid},
+        ).status_code
+        == 422
+    )
+    assert client.get(path, headers=headers(user)).json() == saved
+    response = client.put(
+        path,
+        headers=headers(user),
+        json={
+            "title": saved["title"],
+            "expected_revision": 1,
+            "trip": {**saved["trip"], "anchor": None, "fixed_events": []},
+        },
+    )
+    assert response.status_code == 200
+    assert response.json()["trip"]["anchor"] is None
+    assert response.json()["trip"]["fixed_events"] == []

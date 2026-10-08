@@ -98,3 +98,16 @@ Kiểm chứng catalog: 64 test API qua trên SQLite/PostgreSQL, thêm test nân
 Không cần migration hoặc biến môi trường mới. TASTE-03 hoàn tất phần API/UI snapshot và override; wizard onboarding và dữ liệu POI thật vẫn còn. Chi tiết: [ADR 0005](decisions/0005-trip-taste-snapshot.md).
 
 Kiểm chứng snapshot hoàn tất ngày 2026-10-08: 70 test API đã qua trên SQLite và PostgreSQL; bộ snapshot được chạy lại sau chỉnh sửa tương thích editor cũ và đạt trên cả hai. Cả 6 browser flows đã đạt (5 ở lượt chung, test apply/override chạy lại đạt sau sửa selector combobox). Production build, lint, typecheck, Ruff và format đạt. Tests trình duyệt dùng Auth/API mock, chưa thay thế nghiệm thu Supabase thật.
+
+## Điểm lưu trú và sự kiện cố định (2026-10-08)
+
+- [x] Form tạo/sửa trip có tên + tọa độ điểm lưu trú/xuất phát; có thể bỏ chọn để xóa.
+- [x] Thêm/xóa tối đa 20 sự kiện cố định, nhập giờ Việt Nam; giữ đúng nội dung các dòng còn lại khi xóa một dòng.
+- [x] Lưu/đọc lại bằng contract anchor/fixed_events đã có; thay đổi dữ liệu hủy kết quả validation cũ.
+- [x] Thời gian sự kiện không chỉnh sửa giữ nguyên timezone/độ chính xác đã lưu.
+- [ ] Tìm địa chỉ/chọn điểm trên bản đồ, xác minh vị trí và địa điểm cụ thể của sự kiện.
+- [ ] Thời gian nghỉ theo ngày và kiểm tra khả thi di chuyển giữa các sự kiện.
+
+TASTE-04 vẫn chưa hoàn tất toàn bộ acceptance. Không thêm migration, provider hoặc biến môi trường. Tọa độ nhập tay chỉ kiểm tra miền hợp lệ; chưa xác minh khớp địa chỉ hay nằm trong vùng phục vụ. Giờ sự kiện được API kiểm tra nằm trong trip, kết thúc sau bắt đầu và không chồng lấn.
+
+Kiểm chứng thiết lập chuyến đi: 50 test API validation/storage qua trên SQLite tạm; 7/7 browser flows qua trên production build, bao gồm giữ nguyên timestamp có timezone/độ chính xác khi không sửa. Lint, typecheck, format, Ruff và build đạt. Browser tests mock Auth/API; cần nghiệm thu bằng tài khoản thật.
