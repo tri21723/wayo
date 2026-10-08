@@ -92,7 +92,7 @@ def test_snapshot_survives_profile_changes_and_trip_overrides(storage, payload):
     legacy = {
         key: value
         for key, value in edited.items()
-        if key not in ("taste_snapshot", "diet", "crowd", "adventure")
+        if key not in ("taste_snapshot", "diet", "crowd", "adventure", "day_schedule")
     }
     response = client.put(
         url,
@@ -127,7 +127,7 @@ def test_legacy_create_hash_replay_and_defaults(storage, payload):
     assert response.status_code == 201
     created = response.json()
     data = TripCreate.model_validate(payload).model_dump(mode="json", exclude={"request_id"})
-    for key in ("taste_snapshot", "diet", "crowd", "adventure"):
+    for key in ("taste_snapshot", "diet", "crowd", "adventure", "day_schedule"):
         del data["trip"][key]
     old_hash = hashlib.sha256(
         json.dumps(data, sort_keys=True, ensure_ascii=False).encode()

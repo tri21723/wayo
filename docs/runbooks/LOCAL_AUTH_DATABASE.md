@@ -144,10 +144,20 @@ Hiện nhập tọa độ thủ công, chưa có tìm địa chỉ trên bản �
 
 ## Xem thời gian theo ngày
 
-Sau khi lưu trip, mở trang chi tiết → **Xem thời gian theo ngày**. Kiểm tra giờ đến/về và sự kiện cố định xuất hiện đúng theo giờ Việt Nam. Sự kiện qua đêm xuất hiện ở cả hai ngày; số phút trống chỉ tính trong khung tham khảo 09:00–21:00.
+Sau khi lưu trip, mở trang chi tiết → **Xem thời gian theo ngày**. Kiểm tra giờ đến/về và sự kiện cố định xuất hiện đúng theo giờ Việt Nam. Sự kiện qua đêm xuất hiện ở cả hai ngày; số phút trống tính trong khung hoạt động đã lưu (mặc định 09:00–21:00), loại các khoảng nghỉ đã chọn.
 
-Sửa giờ trip hoặc sự kiện, kiểm tra và lưu, rồi tải bảng thời gian mới. Nếu trip được sửa ở tab khác, panel yêu cầu tải lại bản đã lưu. Các khoảng chưa xếp hoạt động chưa trừ bữa ăn/nghỉ/di chuyển. Không cần cấu hình thêm provider hoặc Supabase.
+Sửa giờ trip hoặc sự kiện, kiểm tra và lưu, rồi tải bảng thời gian mới. Nếu trip được sửa ở tab khác, panel yêu cầu tải lại bản đã lưu. Các khoảng chưa xếp hoạt động chưa trừ di chuyển hoặc bữa ăn/nghỉ chưa khai báo. Không cần cấu hình thêm provider hoặc Supabase.
 
 ## Giờ có thể ghé địa điểm
 
-Trong **Xem gợi ý địa điểm**, POI có lịch mở cửa và duration sẽ hiện các khoảng giờ bắt đầu tham khảo. Khoảng này loại thời gian sự kiện cố định và giới hạn trong giờ trip. Địa điểm có lịch đã biết nhưng không đủ khoảng liên tục sẽ bị lọc; địa điểm thiếu giờ/thời lượng được ghi rõ chưa kết luận. Catalog chưa có POI thật sẽ vẫn trả trạng thái trống. Chưa tính thời gian di chuyển, nghỉ/ăn và lịch ngoại lệ.
+Trong **Xem gợi ý địa điểm**, POI có lịch mở cửa và duration sẽ hiện các khoảng giờ bắt đầu tham khảo. Khoảng này loại sự kiện cố định và khoảng nghỉ, giới hạn trong giờ hoạt động và giờ trip. Địa điểm có lịch đã biết nhưng không đủ khoảng liên tục sẽ bị lọc; địa điểm thiếu giờ/thời lượng được ghi rõ chưa kết luận. Catalog chưa có POI thật sẽ vẫn trả trạng thái trống. Chưa tính thời gian di chuyển, bữa ăn/nghỉ chưa khai báo và lịch ngoại lệ.
+
+## Nghiệm thu giờ hoạt động và nghỉ hằng ngày
+
+1. Trong form trip, chỉnh **Bắt đầu hoạt động** / **Kết thúc hoạt động**, ví dụ 10:00–20:00.
+2. Thêm khoảng nghỉ trưa 12:00–13:00; kiểm tra, lưu và mở lại để xác nhận giữ nguyên.
+3. Xem thời gian theo ngày: khoảng nghỉ lặp mỗi ngày, chỉ hiển thị phần nằm trong giờ đến/về.
+4. Thêm sự kiện 12:30–13:30: bảng giữ sự kiện cố định, phần nghỉ còn lại 12:00–12:30; không trừ hai lần.
+5. Thử nghỉ ngoài khung hoặc chồng nhau: API phải từ chối. Xóa dòng, kiểm tra các dòng còn lại giữ nguyên; xóa hết và lưu để bỏ nghỉ.
+
+Khung áp dụng chung mỗi ngày; chưa hỗ trợ khung qua đêm hoặc tự xếp lịch. Không cần migration hay biến môi trường mới. Khởi động lại API để nạp contract mới trước khi dùng form mới.

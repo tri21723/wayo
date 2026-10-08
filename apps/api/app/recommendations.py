@@ -74,8 +74,10 @@ def rank_places(trip: TripRequest, places: list[PlaceRecord], limit: int):
             message=(
                 "Dựa trên sở thích và điều chỉnh riêng trong bản chuyến đi đã lưu. "
                 "Đây là gợi ý khám phá; "
-                "đối chiếu lịch mở cửa theo tuần với khoảng trống 09:00–21:00 và sự kiện cố định. "
-                "Chưa kiểm tra ngày lễ/ngoại lệ, tuyến đường, nghỉ/ăn uống hoặc tổng chi phí."
+                "đối chiếu lịch mở cửa theo tuần với giờ hoạt động, "
+                "khoảng nghỉ và sự kiện cố định đã lưu. "
+                "Chưa kiểm tra ngày lễ/ngoại lệ, tuyến đường, "
+                "bữa ăn/nghỉ chưa khai báo hoặc tổng chi phí."
             ),
         )
     ]
@@ -154,7 +156,7 @@ def rank_places(trip: TripRequest, places: list[PlaceRecord], limit: int):
             context.append("Không khí phù hợp lựa chọn của bạn.")
         if trip.adventure is not None and trip.adventure == place.effort:
             context.append("Mức vận động phù hợp lựa chọn của bạn.")
-        warnings = ["Chưa kiểm tra ngày lễ/ngoại lệ, thời gian ăn/nghỉ và di chuyển."]
+        warnings = ["Chưa kiểm tra ngày lễ/ngoại lệ, bữa ăn/nghỉ chưa khai báo và di chuyển."]
         if timing.status == "unknown_duration":
             warnings.append("Chưa có thời lượng tham quan để kiểm tra đủ thời gian ghé.")
         if place.hours is None:

@@ -561,3 +561,8 @@ button:disabled {
 .visit-windows li {
   margin-bottom: 0.6rem;
 }
+
+.time-block.rest {
+  border-left-color: #946a35;
+  background: #fff6e6;
+}

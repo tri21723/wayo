@@ -50,8 +50,8 @@ export function TripAvailabilityPanel({
     >
       <h2 id="availability-heading">Thời gian theo ngày</h2>
       <p>
-        Dựa trên giờ đến/về và sự kiện trong bản chuyến đi đã lưu. Hãy lưu thay
-        đổi trước khi xem.
+        Dựa trên giờ đến/về, giờ hoạt động, khoảng nghỉ và sự kiện đã lưu. Hãy
+        lưu thay đổi trước khi xem.
       </p>
       <button
         type="button"

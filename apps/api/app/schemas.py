@@ -53,6 +53,40 @@ class TasteSnapshot(Contract):
     answers: TasteAnswers
 
 
+Clock = Annotated[str, StringConstraints(pattern=r"^([01][0-9]|2[0-3]):[0-5][0-9]$")]
+
+
+class DailyBreak(Contract):
+    label: Text
+    starts_at: Clock
+    ends_at: Clock
+
+    @model_validator(mode="after")
+    def chronological(self) -> Self:
+        if self.ends_at <= self.starts_at:
+            raise ValueError("Khoảng nghỉ phải kết thúc sau khi bắt đầu trong cùng ngày.")
+        return self
+
+
+class DaySchedule(Contract):
+    starts_at: Clock = "09:00"
+    ends_at: Clock = "21:00"
+    breaks: list[DailyBreak] = Field(default_factory=list, max_length=6)
+
+    @model_validator(mode="after")
+    def valid_schedule(self) -> Self:
+        if self.ends_at <= self.starts_at:
+            raise ValueError("Giờ hoạt động phải kết thúc sau khi bắt đầu trong cùng ngày.")
+        ordered = sorted(self.breaks, key=lambda item: item.starts_at)
+        for item in ordered:
+            if item.starts_at < self.starts_at or item.ends_at > self.ends_at:
+                raise ValueError("Khoảng nghỉ phải nằm trong giờ hoạt động.")
+        for previous, current in zip(ordered, ordered[1:], strict=False):
+            if current.starts_at < previous.ends_at:
+                raise ValueError("Các khoảng nghỉ không được trùng giờ.")
+        return self
+
+
 class TripRequest(Contract):
     destination_id: Literal["da-lat"] = "da-lat"
     origin: Text
@@ -69,6 +103,7 @@ class TripRequest(Contract):
     diet: Literal["unrestricted", "vegetarian", "vegan"] = "unrestricted"
     crowd: Literal["quiet", "neutral", "lively"] = "neutral"
     adventure: Literal["easy", "moderate", "challenging"] | None = None
+    day_schedule: DaySchedule = Field(default_factory=DaySchedule)
     anchor: Anchor | None = None
     preferences: list[Text] = Field(default_factory=list, max_length=20)
     exclusions: list[Text] = Field(default_factory=list, max_length=20)

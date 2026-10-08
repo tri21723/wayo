@@ -187,6 +187,30 @@ export interface components {
              */
             currency: "VND";
         };
+        /** DailyBreak */
+        DailyBreak: {
+            /** Label */
+            label: string;
+            /** Starts At */
+            starts_at: string;
+            /** Ends At */
+            ends_at: string;
+        };
+        /** DaySchedule */
+        DaySchedule: {
+            /**
+             * Starts At
+             * @default 09:00
+             */
+            starts_at: string;
+            /**
+             * Ends At
+             * @default 21:00
+             */
+            ends_at: string;
+            /** Breaks */
+            breaks?: components["schemas"]["DailyBreak"][];
+        };
         /** ErrorDetail */
         ErrorDetail: {
             /** Field */
@@ -479,7 +503,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "fixed" | "available" | "outside_activity_hours";
+            kind: "fixed" | "rest" | "available" | "outside_activity_hours";
             /** Minutes */
             minutes: number;
         };
@@ -571,6 +595,7 @@ export interface components {
             crowd: "quiet" | "neutral" | "lively";
             /** Adventure */
             adventure?: ("easy" | "moderate" | "challenging") | null;
+            day_schedule?: components["schemas"]["DaySchedule"];
             anchor?: components["schemas"]["Anchor"] | null;
             /** Preferences */
             preferences?: string[];

@@ -78,6 +78,7 @@ def create_digest(payload: TripCreate) -> str:
         "diet": "unrestricted",
         "crowd": "neutral",
         "adventure": None,
+        "day_schedule": {"starts_at": "09:00", "ends_at": "21:00", "breaks": []},
     }.items():
         if data["trip"].get(key) == default:
             data["trip"].pop(key, None)
@@ -164,7 +165,7 @@ def update_trip(trip_id: UUID, payload: TripUpdate, user_id: UserId, session: Da
     previous = owned(session, user_id, trip_id)
     # Older clients do not know these additive fields; omission must not erase constraints.
     merged = payload.trip.model_dump(mode="json")
-    for key in ("taste_snapshot", "diet", "crowd", "adventure"):
+    for key in ("taste_snapshot", "diet", "crowd", "adventure", "day_schedule"):
         if key not in payload.trip.model_fields_set and key in previous.trip_data:
             merged[key] = previous.trip_data[key]
     trip = TripRequest.model_validate(merged)

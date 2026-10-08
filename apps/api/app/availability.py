@@ -17,7 +17,7 @@ class TimeBlock(Contract):
     starts_at: AwareDatetime
     ends_at: AwareDatetime
     label: str
-    kind: Literal["fixed", "available", "outside_activity_hours"]
+    kind: Literal["fixed", "rest", "available", "outside_activity_hours"]
     minutes: float
 
 
@@ -44,7 +44,7 @@ def block(start: datetime, end: datetime, kind: str, label: str) -> TimeBlock:
 
 
 def available_days(trip: TripRequest) -> list[AvailableDay]:
-    """09:00–21:00 provisional activity hours; never subtract overlapping time twice."""
+    """Selected daily hours and breaks; fixed bookings take precedence over rest."""
     arrival = trip.arrival_at.astimezone(Vietnam)
     departure = trip.departure_at.astimezone(Vietnam)
     events = sorted(trip.fixed_events, key=lambda item: item.starts_at)
@@ -58,8 +58,13 @@ def available_days(trip: TripRequest) -> list[AvailableDay]:
         # Retain the arrival/departure date even if it contains no positive duration.
         blocks = []
         if start < end:
-            activity_start = max(start, datetime.combine(date, time(9), Vietnam))
-            activity_end = min(end, datetime.combine(date, time(21), Vietnam))
+            activity_start = max(
+                start,
+                datetime.combine(date, time.fromisoformat(trip.day_schedule.starts_at), Vietnam),
+            )
+            activity_end = min(
+                end, datetime.combine(date, time.fromisoformat(trip.day_schedule.ends_at), Vietnam)
+            )
             boundaries = {start, end}
             for value in (activity_start, activity_end):
                 if start < value < end:
@@ -73,15 +78,29 @@ def available_days(trip: TripRequest) -> list[AvailableDay]:
                 if clipped_start < clipped_end:
                     boundaries.update((clipped_start, clipped_end))
                     day_events.append((clipped_start, clipped_end, event.label))
+            day_breaks = []
+            for rest in trip.day_schedule.breaks:
+                rest_start = max(
+                    start, datetime.combine(date, time.fromisoformat(rest.starts_at), Vietnam)
+                )
+                rest_end = min(
+                    end, datetime.combine(date, time.fromisoformat(rest.ends_at), Vietnam)
+                )
+                if rest_start < rest_end:
+                    boundaries.update((rest_start, rest_end))
+                    day_breaks.append((rest_start, rest_end, rest.label))
             ordered = sorted(boundaries)
             for left, right in zip(ordered, ordered[1:], strict=False):
                 matching = next((label for a, b, label in day_events if a <= left < b), None)
+                resting = next((label for a, b, label in day_breaks if a <= left < b), None)
                 if matching is not None:
                     kind, label = "fixed", matching
+                elif resting is not None:
+                    kind, label = "rest", resting
                 elif activity_start <= left and right <= activity_end:
                     kind, label = "available", "Thời gian chưa xếp hoạt động"
                 else:
-                    kind, label = "outside_activity_hours", "Ngoài giờ hoạt động tham khảo"
+                    kind, label = "outside_activity_hours", "Ngoài giờ hoạt động đã chọn"
                 if blocks and blocks[-1].kind == kind and blocks[-1].label == label:
                     blocks[-1] = block(blocks[-1].starts_at, right, kind, label)
                 else:
@@ -112,11 +131,13 @@ def availability(trip_id: UUID, user_id: UserId, session: Database):
     trip = TripRequest.model_validate(row.trip_data)
     notices = [
         InputNotice(
-            code="PROVISIONAL_ACTIVITY_HOURS",
+            code="SELECTED_ACTIVITY_HOURS",
             message=(
-                "Khoảng trống tính trong giờ hoạt động tham khảo 09:00–21:00 mỗi ngày, "
-                "giới hạn bởi giờ đến/về và sự kiện cố định. "
-                "Chưa dành thời gian cho bữa ăn, nghỉ và di chuyển."
+                f"Khoảng trống tính trong giờ {trip.day_schedule.starts_at}–"
+                f"{trip.day_schedule.ends_at} mỗi ngày, "
+                "giới hạn bởi giờ đến/về, sự kiện cố định và khoảng nghỉ đã chọn. "
+                "Sự kiện cố định được ưu tiên khi trùng giờ nghỉ. Chưa tính di chuyển; "
+                "bữa ăn/nghỉ chỉ được dành thời gian nếu bạn thêm vào."
             ),
         )
     ]

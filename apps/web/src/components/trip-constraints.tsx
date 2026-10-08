@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { TripDaySchedule, readDaySchedule } from "./trip-day-schedule";
 import type { TripRequest } from "@/lib/api";
 
 function vietnamTime(value: string) {
@@ -23,6 +24,7 @@ export function readConstraints(form: FormData, initial?: TripRequest) {
   const ends = form.getAll("event_end");
   const ids = form.getAll("event_id");
   return {
+    day_schedule: readDaySchedule(form),
     anchor: form.has("use_anchor")
       ? {
           label: String(form.get("anchor_label")),
@@ -55,6 +57,7 @@ export function TripConstraints({
   const nextId = useRef(events.length);
   return (
     <>
+      <TripDaySchedule initial={initial?.day_schedule} onChange={onChange} />
       <fieldset className="choice-group constraint-group">
         <legend>Điểm lưu trú / điểm xuất phát</legend>
         <p className="field-help">

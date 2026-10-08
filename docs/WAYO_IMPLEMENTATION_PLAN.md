@@ -202,7 +202,7 @@ Phụ thuộc: BASE-05, DB-01, PROD-03.
 - [x] **TASTE-02 · P0** Mapping câu trả lời → taste vector có bounds/defaults và schema version; loại trừ trekking/dietary/accessibility tách khỏi điểm sở thích mềm.
 - [x] **TASTE-03 · P0** Profile API/UI; trip có snapshot và override để sửa trip không vô tình sửa profile gốc.
 - [ ] **TASTE-04 · P0** Trip setup validate ngày giờ, số người, budget scope, mode, anchor, fixed events và thời gian nghỉ; form tiếng Việt rõ đơn vị.
-  - Cập nhật 2026-10-08: đã có UI anchor bằng tọa độ và fixed-event editor, lưu/sửa/xóa; còn map picker, giờ nghỉ và kiểm tra di chuyển.
+  - Cập nhật 2026-10-08: đã có UI anchor bằng tọa độ và fixed-event editor, lưu/sửa/xóa; đã thêm giờ hoạt động và tối đa 6 khoảng nghỉ hằng ngày; còn map picker và kiểm tra di chuyển.
 - [ ] **TASTE-05 · P1** Kiểm tra onboarding với người dùng thử; ghi completion/time/drop-off và điều chỉnh câu hỏi gây nhầm.
 
 Nghiệm thu: cùng input tạo vector nhất quán; exclusion không bị ranker biến thành sở thích thấp; trip đủ dữ kiện để planner chạy hoặc hỏi đúng phần còn thiếu.
@@ -232,6 +232,7 @@ Phụ thuộc: RANK-01–04, DB-02–05, BASE-07. Đây là đường găng.
 - [ ] **PLAN-02 · P0** Budget service tính từng nhóm chi phí, min–max, per-person/group conversion, shared cost và dự phòng; không double-count lưu trú/di chuyển.
 - [ ] **PLAN-03 · P0** Hard-constraint validator: trip bounds, overlap, travel time, opening windows, fixed events, exclusions; xử lý giờ qua đêm và ngày ngoại lệ.
 - [ ] **PLAN-04 · P0** Scheduler phân bổ ngày, bữa ăn, nghỉ, duration và buffer; giới hạn hoạt động theo pace; tính điểm neo đầu/cuối ngày.
+  - Cập nhật 2026-10-08: đã có khung giờ và khoảng nghỉ do người dùng chọn, dùng chung cho availability/discovery; chưa tự phân bổ lịch, pace hoặc buffer.
 - [ ] **PLAN-05 · P0** Optimizer greedy + local improvement có time windows; route mới luôn revalidate; so với baseline tổng travel minutes với cùng tập POI.
 - [ ] **PLAN-06 · P0** Phân biệt infeasible với unknown; khi quá ngân sách/thiếu giờ/không có tuyến, trả nguyên nhân và phương án nới điều kiện; không âm thầm bỏ hard constraint.
 - [ ] **PLAN-07 · P0** Generate endpoint/job có status, idempotency, timeout/cancel, lưu metadata; không publish kết quả lỗi dở dang.

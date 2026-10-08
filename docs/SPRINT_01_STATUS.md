@@ -134,3 +134,15 @@ Kiểm chứng bảng thời gian: 6 test API mới qua trên SQLite tạm; 8/8 
 Không cần migration hoặc cấu hình thêm. PLAN-03 có thêm validation weekly windows; chưa hoàn tất hard-constraint validator đầy đủ. Chi tiết: [ADR 0007](decisions/0007-opening-hours-and-visit-windows.md).
 
 Kiểm chứng giờ có thể ghé: toàn bộ 88 test API qua trên SQLite tạm, 8/8 browser flows qua trên production build (discovery kiểm tra cả window có đủ dữ liệu và hours chưa biết). Ruff, lint, typecheck, format và build đạt. Chưa nhập POI thật, chưa kiểm chứng lịch ngoại lệ hoặc route provider.
+
+## Giờ hoạt động và khoảng nghỉ hằng ngày (2026-10-08)
+
+- [x] Trip setup lưu khung giờ cùng ngày và tối đa 6 khoảng nghỉ lặp mỗi ngày; kiểm tra trong khung và không trùng nhau.
+- [x] Bảng thời gian hiển thị rest; giữ sự kiện khi trùng nghỉ và không trừ thời gian hai lần.
+- [x] Discovery dùng khoảng trống đã loại giờ nghỉ để kiểm tra giờ ghé.
+- [x] Trip cũ mặc định 09:00–21:00 không nghỉ; giữ retry hash và cấu hình khi client cũ không gửi trường mới.
+- [ ] Lịch riêng từng ngày, tự xếp bữa ăn/nghỉ theo pace, buffer và routing.
+
+Không cần migration hoặc cấu hình Supabase thêm. PLAN-04 và TASTE-04 vẫn chưa hoàn tất toàn bộ; xem [ADR 0008](decisions/0008-custom-daily-schedule.md). Các giới hạn 09:00–21:00 và chưa tính giờ nghỉ trong ghi chú trước được thay bằng cấu hình mới này.
+
+Kiểm chứng: toàn bộ 98 test API qua trên SQLite tạm và 8/8 browser flows qua trên production build; Ruff, lint, TypeScript, format và production build đạt. CI bổ sung test lịch hằng ngày vào lượt PostgreSQL. Kiểm thử trình duyệt dùng Auth/API mock, không thay nghiệm thu bằng tài khoản Supabase thật.

@@ -579,7 +579,7 @@ test("late profile response after sign out cannot populate a guest draft", async
   await expect(page.getByText(/Đã lấy từ hồ sơ sở thích/)).toHaveCount(0);
 });
 
-test("anchor and fixed events persist, retain remaining rows after removal and can be cleared", async ({
+test("anchor, events and daily breaks persist, retain rows after removal and can be cleared", async ({
   page,
 }) => {
   await mockAuth(page);
@@ -639,6 +639,28 @@ test("anchor and fixed events persist, retain remaining rows after removal and c
     .fill("Khách sạn thử nghiệm");
   await page.getByLabel("Vĩ độ", { exact: true }).fill("11.94");
   await page.getByLabel("Kinh độ", { exact: true }).fill("108.44");
+  await page.getByLabel("Bắt đầu hoạt động", { exact: true }).fill("10:00");
+  await page.getByLabel("Kết thúc hoạt động", { exact: true }).fill("20:00");
+  for (const [index, start, end] of [
+    [1, "12:00", "13:00"],
+    [2, "17:00", "18:00"],
+  ] as const) {
+    await page
+      .getByRole("button", { name: "+ Thêm khoảng nghỉ hằng ngày" })
+      .click();
+    await page
+      .getByLabel(`Tên khoảng nghỉ ${index}`, { exact: true })
+      .fill(`Nghỉ ${index}`);
+    await page.getByLabel(`Bắt đầu nghỉ ${index}`, { exact: true }).fill(start);
+    await page.getByLabel(`Kết thúc nghỉ ${index}`, { exact: true }).fill(end);
+  }
+  await page
+    .getByRole("button", { name: "Xóa khoảng nghỉ 1", exact: true })
+    .click();
+  await expect(
+    page.getByLabel("Tên khoảng nghỉ 1", { exact: true }),
+  ).toHaveValue("Nghỉ 2");
+
   for (const [index, hour] of [
     [1, "14"],
     [2, "16"],
@@ -667,6 +689,11 @@ test("anchor and fixed events persist, retain remaining rows after removal and c
     page.getByRole("button", { name: "Lưu chuyến đi", exact: true }),
   ).toBeVisible();
   expect(lastTrip).toMatchObject({
+    day_schedule: {
+      starts_at: "10:00",
+      ends_at: "20:00",
+      breaks: [{ label: "Nghỉ 2", starts_at: "17:00", ends_at: "18:00" }],
+    },
     anchor: {
       label: "Khách sạn thử nghiệm",
       latitude: 11.94,
@@ -686,6 +713,12 @@ test("anchor and fixed events persist, retain remaining rows after removal and c
   await page.getByRole("link", { name: "Mở bản đã lưu →" }).click();
   await expect(page).toHaveURL(new RegExp(`/trips/${tripId}$`));
   await expect(page.getByLabel("Vĩ độ", { exact: true })).toHaveValue("11.94");
+  await expect(
+    page.getByLabel("Bắt đầu hoạt động", { exact: true }),
+  ).toHaveValue("10:00");
+  await expect(
+    page.getByLabel("Tên khoảng nghỉ 1", { exact: true }),
+  ).toHaveValue("Nghỉ 2");
   await expect(page.getByLabel("Tên sự kiện 1", { exact: true })).toHaveValue(
     "Hẹn 2",
   );
@@ -704,18 +737,28 @@ test("anchor and fixed events persist, retain remaining rows after removal and c
   await expect(page.getByRole("button", { name: "Lưu thay đổi" })).toHaveCount(
     0,
   );
+  await page
+    .getByRole("button", { name: "Xóa khoảng nghỉ 1", exact: true })
+    .click();
   await page.getByLabel("Tôi đã có điểm lưu trú / xuất phát").uncheck();
   await page
     .getByRole("button", { name: "Kiểm tra thông tin chuyến đi" })
     .click();
   await page.getByRole("button", { name: "Lưu thay đổi" }).click();
   await expect(page.getByText("Đã lưu thay đổi chuyến đi.")).toBeVisible();
-  expect(lastTrip).toMatchObject({ anchor: null, fixed_events: [] });
+  expect(lastTrip).toMatchObject({
+    anchor: null,
+    fixed_events: [],
+    day_schedule: { starts_at: "10:00", ends_at: "20:00", breaks: [] },
+  });
   await page.reload();
   await expect(
     page.getByLabel("Tôi đã có điểm lưu trú / xuất phát"),
   ).not.toBeChecked();
   await expect(page.getByText("Chưa có sự kiện cố định.")).toBeVisible();
+  await expect(
+    page.getByText("Chưa dành thời gian ăn/nghỉ hằng ngày."),
+  ).toBeVisible();
 });
 
 test("daily availability shows fixed bookings and rejects stale results", async ({
@@ -779,6 +822,13 @@ test("daily availability shows fixed bookings and rejects stale results", async 
                   label: "Vé tham quan đã đặt",
                   minutes: 60,
                 },
+                {
+                  starts_at: "2026-11-07T12:00:00+07:00",
+                  ends_at: "2026-11-07T13:00:00+07:00",
+                  kind: "rest",
+                  label: "Nghỉ trưa đã chọn",
+                  minutes: 60,
+                },
               ],
             },
             { date: "2026-11-08", available_minutes: 0, blocks: [] },
@@ -796,6 +846,9 @@ test("daily availability shows fixed bookings and rejects stale results", async 
   await page.getByRole("link", { name: "Availability fixture" }).click();
   const load = page.getByRole("button", { name: "Xem thời gian theo ngày" });
   await load.click();
+  await expect(page.locator(".time-block.rest")).toContainText(
+    "Nghỉ trưa đã chọn",
+  );
   await expect(
     page.getByRole("heading", { name: "Ngày 07/11/2026" }),
   ).toBeVisible();
