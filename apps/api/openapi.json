@@ -1448,7 +1448,7 @@
           "algorithm_version": {
             "type": "string",
             "title": "Algorithm Version",
-            "default": "saved-trip-taste-v2"
+            "default": "saved-trip-hours-v3"
           },
           "items": {
             "items": {
@@ -1593,6 +1593,9 @@
             },
             "type": "array",
             "title": "Warnings"
+          },
+          "timing": {
+            "$ref": "#/components/schemas/VisitTiming"
           }
         },
         "additionalProperties": false,
@@ -1602,7 +1605,8 @@
           "matched_interests",
           "matched_context",
           "reasons",
-          "warnings"
+          "warnings",
+          "timing"
         ],
         "title": "SuggestedPlace"
       },
@@ -2097,6 +2101,67 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "VisitTiming": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "fits_known_hours",
+              "unknown_hours",
+              "unknown_duration",
+              "no_window"
+            ],
+            "title": "Status"
+          },
+          "windows": {
+            "items": {
+              "$ref": "#/components/schemas/VisitWindow"
+            },
+            "type": "array",
+            "title": "Windows"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "VisitTiming"
+      },
+      "VisitWindow": {
+        "properties": {
+          "starts_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Starts At"
+          },
+          "latest_start_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Latest Start At"
+          },
+          "ends_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Ends At"
+          },
+          "duration_minutes": {
+            "type": "integer",
+            "maximum": 720.0,
+            "minimum": 5.0,
+            "title": "Duration Minutes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "starts_at",
+          "latest_start_at",
+          "ends_at",
+          "duration_minutes"
+        ],
+        "title": "VisitWindow"
       }
     },
     "securitySchemes": {

@@ -147,3 +147,7 @@ Hiện nhập tọa độ thủ công, chưa có tìm địa chỉ trên bản �
 Sau khi lưu trip, mở trang chi tiết → **Xem thời gian theo ngày**. Kiểm tra giờ đến/về và sự kiện cố định xuất hiện đúng theo giờ Việt Nam. Sự kiện qua đêm xuất hiện ở cả hai ngày; số phút trống chỉ tính trong khung tham khảo 09:00–21:00.
 
 Sửa giờ trip hoặc sự kiện, kiểm tra và lưu, rồi tải bảng thời gian mới. Nếu trip được sửa ở tab khác, panel yêu cầu tải lại bản đã lưu. Các khoảng chưa xếp hoạt động chưa trừ bữa ăn/nghỉ/di chuyển. Không cần cấu hình thêm provider hoặc Supabase.
+
+## Giờ có thể ghé địa điểm
+
+Trong **Xem gợi ý địa điểm**, POI có lịch mở cửa và duration sẽ hiện các khoảng giờ bắt đầu tham khảo. Khoảng này loại thời gian sự kiện cố định và giới hạn trong giờ trip. Địa điểm có lịch đã biết nhưng không đủ khoảng liên tục sẽ bị lọc; địa điểm thiếu giờ/thời lượng được ghi rõ chưa kết luận. Catalog chưa có POI thật sẽ vẫn trả trạng thái trống. Chưa tính thời gian di chuyển, nghỉ/ăn và lịch ngoại lệ.

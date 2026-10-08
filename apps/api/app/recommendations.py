@@ -6,10 +6,12 @@ from uuid import UUID
 from fastapi import APIRouter, Query
 
 from app.auth import UserId
+from app.availability import available_days
 from app.catalog import PlaceRecord, verified_places
 from app.database import Database
 from app.schemas import ApiError, Contract, InputNotice, TripRequest
 from app.trips import owned
+from app.visit_windows import VisitTiming, visit_timing
 
 ALIASES = {
     "cafe": "cafe",
@@ -50,11 +52,12 @@ class SuggestedPlace(Contract):
     matched_context: list[str]
     reasons: list[str]
     warnings: list[str]
+    timing: VisitTiming
 
 
 class Recommendations(Contract):
     trip_revision: int
-    algorithm_version: str = "saved-trip-taste-v2"
+    algorithm_version: str = "saved-trip-hours-v3"
     items: list[SuggestedPlace]
     notices: list[InputNotice]
 
@@ -71,7 +74,8 @@ def rank_places(trip: TripRequest, places: list[PlaceRecord], limit: int):
             message=(
                 "Dựa trên sở thích và điều chỉnh riêng trong bản chuyến đi đã lưu. "
                 "Đây là gợi ý khám phá; "
-                "chưa kiểm tra giờ mở cửa theo ngày đi, tuyến đường, lịch trình hoặc tổng chi phí."
+                "đối chiếu lịch mở cửa theo tuần với khoảng trống 09:00–21:00 và sự kiện cố định. "
+                "Chưa kiểm tra ngày lễ/ngoại lệ, tuyến đường, nghỉ/ăn uống hoặc tổng chi phí."
             ),
         )
     ]
@@ -108,12 +112,14 @@ def rank_places(trip: TripRequest, places: list[PlaceRecord], limit: int):
             )
         )
         return [], notices
+    days = available_days(trip)
     candidates = []
     total_budget = trip.budget.amount_vnd * (
         trip.people_count if trip.budget.scope == "per_person" else 1
     )
     for place in places:
-        if place.hours == []:
+        timing = visit_timing(place, days)
+        if timing.status == "no_window":
             continue
         if set(place.tags) & excluded_tags:
             continue
@@ -148,7 +154,9 @@ def rank_places(trip: TripRequest, places: list[PlaceRecord], limit: int):
             context.append("Không khí phù hợp lựa chọn của bạn.")
         if trip.adventure is not None and trip.adventure == place.effort:
             context.append("Mức vận động phù hợp lựa chọn của bạn.")
-        warnings = ["Chưa kiểm tra lịch mở cửa thực tế cho thời gian chuyến đi."]
+        warnings = ["Chưa kiểm tra ngày lễ/ngoại lệ, thời gian ăn/nghỉ và di chuyển."]
+        if timing.status == "unknown_duration":
+            warnings.append("Chưa có thời lượng tham quan để kiểm tra đủ thời gian ghé.")
         if place.hours is None:
             warnings.append("Chưa có giờ mở cửa được xác minh.")
         if place.price is None:
@@ -163,6 +171,8 @@ def rank_places(trip: TripRequest, places: list[PlaceRecord], limit: int):
             else ["Địa điểm để khám phá thêm, chưa trùng sở thích đã chọn."]
         )
         reasons.extend(context)
+        if timing.status == "fits_known_hours":
+            reasons.append("Có khoảng trống đủ thời lượng ghé theo lịch mở cửa đã lưu.")
         if trip.diet != "unrestricted" and serves_food:
             reasons.append("Có lựa chọn ăn chay phù hợp chế độ ăn đã chọn, theo nguồn đã kiểm tra.")
         if restrictions:
@@ -174,6 +184,7 @@ def rank_places(trip: TripRequest, places: list[PlaceRecord], limit: int):
                 matched_context=context,
                 reasons=reasons,
                 warnings=warnings,
+                timing=timing,
             )
         )
     candidates.sort(

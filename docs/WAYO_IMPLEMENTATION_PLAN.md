@@ -224,7 +224,7 @@ Nghiệm thu: không trả POI disabled/khác destination/vi phạm exclusion; p
 
 ### E06 — Routing, budget và constraint planner · W4–W5 · BE
 
-Cập nhật 2026-10-08: có preview thời gian từng ngày từ trip bounds/fixed events, gồm booking qua đêm và khung 09:00–21:00 tham khảo. Chưa có routing, meal/rest/buffer hay phân bổ POI; PLAN-03/04 chưa đủ acceptance. Xem ADR 0006.
+Cập nhật 2026-10-08: có preview thời gian từng ngày từ trip bounds/fixed events, gồm booking qua đêm và khung 09:00–21:00 tham khảo. Đã đối chiếu weekly opening hours với khoảng trống, hiển thị earliest/latest start khi đủ duration. Chưa có routing, lịch ngoại lệ, meal/rest/buffer hay phân bổ POI; PLAN-03/04 chưa đủ acceptance. Xem ADR 0006.
 
 Phụ thuộc: RANK-01–04, DB-02–05, BASE-07. Đây là đường găng.
 

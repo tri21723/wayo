@@ -548,3 +548,16 @@ button:disabled {
 .time-block.outside_activity_hours {
   color: var(--muted);
 }
+
+.visit-windows {
+  padding: 0.8rem;
+  background: #eef5e9;
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+.visit-windows h4 {
+  margin: 0;
+}
+.visit-windows li {
+  margin-bottom: 0.6rem;
+}

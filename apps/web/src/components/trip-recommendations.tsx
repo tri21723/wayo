@@ -1,6 +1,17 @@
 "use client";
 
 import { useState } from "react";
+function visitTime(value: string) {
+  return new Date(value).toLocaleString("vi-VN", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 import { getRecommendations, type Recommendations } from "@/lib/api";
 
 export function TripRecommendations({
@@ -64,7 +75,7 @@ export function TripRecommendations({
             ))}
           </div>
           <div className="trip-grid">
-            {data.items.map(({ place, reasons, warnings }) => (
+            {data.items.map(({ place, reasons, warnings, timing }) => (
               <article className="place-card" key={place.slug}>
                 <h3>{place.name}</h3>
                 <p>{place.address}</p>
@@ -75,6 +86,38 @@ export function TripRecommendations({
                 </p>
                 {place.duration_minutes != null && (
                   <p>Thời lượng tham khảo: {place.duration_minutes} phút.</p>
+                )}
+                {timing?.status === "fits_known_hours" && (
+                  <div className="visit-windows">
+                    <h4>Khoảng giờ có thể ghé (tham khảo)</h4>
+                    <p>
+                      Chọn giờ bắt đầu trong mỗi khoảng dưới đây. Các lựa chọn
+                      độc lập; chưa cộng thời gian di chuyển.
+                    </p>
+                    <ul>
+                      {(timing.windows ?? []).slice(0, 3).map((window) => (
+                        <li key={`${window.starts_at}:${window.ends_at}`}>
+                          Bắt đầu từ {visitTime(window.starts_at)} đến{" "}
+                          {visitTime(window.latest_start_at)} ·{" "}
+                          {window.duration_minutes} phút · kết thúc trước hoặc
+                          lúc {visitTime(window.ends_at)}
+                        </li>
+                      ))}
+                    </ul>
+                    {(timing.windows ?? []).length > 3 && (
+                      <p>
+                        Còn {(timing.windows ?? []).length - 3} khoảng giờ khác.
+                      </p>
+                    )}
+                  </div>
+                )}
+                {timing?.status === "unknown_hours" && (
+                  <p>Chưa xác định giờ có thể ghé: thiếu lịch mở cửa.</p>
+                )}
+                {timing?.status === "unknown_duration" && (
+                  <p>
+                    Chưa xác định giờ có thể ghé: thiếu thời lượng tham quan.
+                  </p>
                 )}
                 <ul>
                   {reasons.map((reason) => (

@@ -122,3 +122,15 @@ Kiểm chứng thiết lập chuyến đi: 50 test API validation/storage qua tr
 Khung tham khảo 09:00–21:00; khoảng trống chưa đảm bảo khả thi ghé thăm địa điểm. Không tạo itinerary/version hay cần migration. PLAN-03/04 vẫn chưa hoàn tất. Chi tiết: [ADR 0006](decisions/0006-daily-availability.md).
 
 Kiểm chứng bảng thời gian: 6 test API mới qua trên SQLite tạm; 8/8 browser flows qua trên production build. Ruff, lint, typecheck, format và build đạt. Browser tests dùng Auth/API mock; còn nghiệm thu với tài khoản Supabase thật.
+
+## Giờ mở cửa và giờ có thể ghé (2026-10-08)
+
+- [x] Discovery v3 giao lịch mở cửa theo tuần với thời gian trống của trip.
+- [x] Loại địa điểm đóng cửa trong các ngày đi hoặc không còn khoảng liên tục đủ duration.
+- [x] Phân biệt thiếu hours/duration với không có khoảng phù hợp, không tự đoán dữ liệu.
+- [x] UI hiển thị giờ bắt đầu sớm/muộn và hạn kết thúc, cùng giới hạn chưa tính route/rest/ngoại lệ.
+- [ ] Lịch ngoại lệ/ngày lễ, thời gian nghỉ, routing, itinerary scheduler và POI thật.
+
+Không cần migration hoặc cấu hình thêm. PLAN-03 có thêm validation weekly windows; chưa hoàn tất hard-constraint validator đầy đủ. Chi tiết: [ADR 0007](decisions/0007-opening-hours-and-visit-windows.md).
+
+Kiểm chứng giờ có thể ghé: toàn bộ 88 test API qua trên SQLite tạm, 8/8 browser flows qua trên production build (discovery kiểm tra cả window có đủ dữ liệu và hours chưa biết). Ruff, lint, typecheck, format và build đạt. Chưa nhập POI thật, chưa kiểm chứng lịch ngoại lệ hoặc route provider.

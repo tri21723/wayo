@@ -39,3 +39,7 @@ Validator không kiểm chứng sự thật của trang nguồn. Không thể đ
 ## Chế độ ăn và mức vận động
 
 Catalog hỗ trợ thêm `dietary_options: ["vegetarian", "vegan"]` (chỉ ghi các lựa chọn có thật) và `effort: "easy" | "moderate" | "challenging"`. Cả hai có thể null khi chưa biết. Verified có dietary_options cần source field `diet`; effort cần source field `access`. Không tự suy diễn chế độ ăn từ tên món/địa điểm. Discovery dùng thông tin này theo [ADR 0005](../docs/decisions/0005-trip-taste-snapshot.md).
+
+## Lịch mở cửa đầy đủ
+
+Khi hours là một danh sách, discovery coi các thứ không xuất hiện là không mở. Chỉ nhập danh sách sau khi xác minh lịch đầy đủ cả tuần. Nếu mới biết một phần, để hours null. Hai window liên tiếp không có khoảng đóng cửa được gộp khi tính giờ có thể ghé. Chưa hỗ trợ lịch ngoại lệ/ngày lễ; kết quả chỉ là tham khảo theo lịch tuần. Xem [ADR 0007](../docs/decisions/0007-opening-hours-and-visit-windows.md).

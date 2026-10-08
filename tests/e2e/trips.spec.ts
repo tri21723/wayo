@@ -272,6 +272,7 @@ test("discovery handles empty catalog, errors, sources and stale trip revisions"
 }) => {
   await mockAuth(page);
   let mode: "empty" | "error" | "populated" | "stale" = "empty";
+  let hoursKnown = true;
   const trip = {
     id: tripId,
     title: "Discovery fixture",
@@ -339,6 +340,19 @@ test("discovery handles empty catalog, errors, sources and stale trip revisions"
                         },
                       ],
                     },
+                    timing: hoursKnown
+                      ? {
+                          status: "fits_known_hours",
+                          windows: [
+                            {
+                              starts_at: "2026-11-07T09:00:00+07:00",
+                              latest_start_at: "2026-11-07T10:00:00+07:00",
+                              ends_at: "2026-11-07T11:00:00+07:00",
+                              duration_minutes: 60,
+                            },
+                          ],
+                        }
+                      : { status: "unknown_hours", windows: [] },
                     reasons: ["Hợp sở thích: Cà phê"],
                     warnings: ["Chưa có giờ mở cửa được xác minh."],
                   },
@@ -376,6 +390,18 @@ test("discovery handles empty catalog, errors, sources and stale trip revisions"
     "href",
     "https://example.org/test-fixture",
   );
+  await expect(
+    page.getByRole("heading", { name: "Khoảng giờ có thể ghé (tham khảo)" }),
+  ).toBeVisible();
+  await expect(page.getByText(/Bắt đầu từ.*09:00.*10:00/)).toBeVisible();
+  hoursKnown = false;
+  await load.click();
+  await expect(
+    page.getByText("Chưa xác định giờ có thể ghé: thiếu lịch mở cửa."),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Khoảng giờ có thể ghé (tham khảo)" }),
+  ).toHaveCount(0);
   mode = "stale";
   await load.click();
   await expect(

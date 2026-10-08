@@ -357,7 +357,7 @@ export interface components {
             trip_revision: number;
             /**
              * Algorithm Version
-             * @default saved-trip-taste-v2
+             * @default saved-trip-hours-v3
              */
             algorithm_version: string;
             /** Items */
@@ -420,6 +420,7 @@ export interface components {
             reasons: string[];
             /** Warnings */
             warnings: string[];
+            timing: components["schemas"]["VisitTiming"];
         };
         /** TasteAnswers */
         TasteAnswers: {
@@ -614,6 +615,36 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** VisitTiming */
+        VisitTiming: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "fits_known_hours" | "unknown_hours" | "unknown_duration" | "no_window";
+            /** Windows */
+            windows?: components["schemas"]["VisitWindow"][];
+        };
+        /** VisitWindow */
+        VisitWindow: {
+            /**
+             * Starts At
+             * Format: date-time
+             */
+            starts_at: string;
+            /**
+             * Latest Start At
+             * Format: date-time
+             */
+            latest_start_at: string;
+            /**
+             * Ends At
+             * Format: date-time
+             */
+            ends_at: string;
+            /** Duration Minutes */
+            duration_minutes: number;
         };
     };
     responses: never;
