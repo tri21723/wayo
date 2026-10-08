@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.exc import SQLAlchemyError
 from starlette.exceptions import HTTPException
 
+from app.availability import router as availability_router
 from app.profiles import router as profiles_router
 from app.recommendations import router as recommendations_router
 from app.schemas import ApiError, ErrorDetail, Health, InputNotice, TripRequest, TripValidation
@@ -104,3 +105,4 @@ def validate_trip(trip: TripRequest) -> TripValidation:
 app.include_router(trips_router)
 app.include_router(profiles_router)
 app.include_router(recommendations_router)
+app.include_router(availability_router)

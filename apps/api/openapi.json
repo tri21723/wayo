@@ -761,6 +761,84 @@
           }
         }
       }
+    },
+    "/v1/trips/{trip_id}/availability": {
+      "get": {
+        "tags": [
+          "Planning inputs"
+        ],
+        "summary": "Availability",
+        "operationId": "getAvailability",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "trip_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Trip Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TripAvailability"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -820,6 +898,33 @@
           "message"
         ],
         "title": "ApiError"
+      },
+      "AvailableDay": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "blocks": {
+            "items": {
+              "$ref": "#/components/schemas/TimeBlock"
+            },
+            "type": "array",
+            "title": "Blocks"
+          },
+          "available_minutes": {
+            "type": "number",
+            "title": "Available Minutes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "date",
+          "blocks",
+          "available_minutes"
+        ],
+        "title": "AvailableDay"
       },
       "Budget": {
         "properties": {
@@ -957,6 +1062,19 @@
           "ends_at"
         ],
         "title": "FixedEvent"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
       },
       "Health": {
         "properties": {
@@ -1594,6 +1712,77 @@
         ],
         "title": "TasteSnapshot"
       },
+      "TimeBlock": {
+        "properties": {
+          "starts_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Starts At"
+          },
+          "ends_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Ends At"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "fixed",
+              "available",
+              "outside_activity_hours"
+            ],
+            "title": "Kind"
+          },
+          "minutes": {
+            "type": "number",
+            "title": "Minutes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "starts_at",
+          "ends_at",
+          "label",
+          "kind",
+          "minutes"
+        ],
+        "title": "TimeBlock"
+      },
+      "TripAvailability": {
+        "properties": {
+          "trip_revision": {
+            "type": "integer",
+            "title": "Trip Revision"
+          },
+          "days": {
+            "items": {
+              "$ref": "#/components/schemas/AvailableDay"
+            },
+            "type": "array",
+            "title": "Days"
+          },
+          "notices": {
+            "items": {
+              "$ref": "#/components/schemas/InputNotice"
+            },
+            "type": "array",
+            "title": "Notices"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "trip_revision",
+          "days",
+          "notices"
+        ],
+        "title": "TripAvailability"
+      },
       "TripCreate": {
         "properties": {
           "request_id": {
@@ -1868,6 +2057,46 @@
           "trip"
         ],
         "title": "TripValidation"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
       }
     },
     "securitySchemes": {

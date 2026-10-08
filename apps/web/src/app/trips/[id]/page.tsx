@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { AccountNav } from "@/components/account-nav";
 import { useAuth } from "@/components/auth-provider";
 import { TripRecommendations } from "@/components/trip-recommendations";
+import { TripAvailabilityPanel } from "@/components/trip-availability";
 import { TripForm } from "@/components/trip-form";
 import { deleteTrip, getTrip, type SavedTrip } from "@/lib/api";
 
@@ -87,6 +88,11 @@ function Editor({ id }: { id: string }) {
               setSavedNotice(true);
               setError("");
             }}
+          />
+          <TripAvailabilityPanel
+            key={`availability:${trip.id}:${trip.revision}`}
+            tripId={trip.id}
+            revision={trip.revision}
           />
           <TripRecommendations
             key={`recommendations:${trip.id}:${trip.revision}`}

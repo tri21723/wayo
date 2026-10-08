@@ -141,3 +141,9 @@ Dietary discovery chỉ hiện địa điểm ăn uống có evidence phù hợp
 5. Xóa một dòng sự kiện, kiểm tra các dòng còn lại không đổi. Bỏ chọn điểm lưu trú, xóa toàn bộ sự kiện, kiểm tra và lưu: lần mở sau phải trống.
 
 Hiện nhập tọa độ thủ công, chưa có tìm địa chỉ trên bản đồ. Sự kiện chỉ giữ thời gian; chưa có địa điểm sự kiện hoặc kiểm tra thời gian di chuyển. Không cần cấu hình dịch vụ mới.
+
+## Xem thời gian theo ngày
+
+Sau khi lưu trip, mở trang chi tiết → **Xem thời gian theo ngày**. Kiểm tra giờ đến/về và sự kiện cố định xuất hiện đúng theo giờ Việt Nam. Sự kiện qua đêm xuất hiện ở cả hai ngày; số phút trống chỉ tính trong khung tham khảo 09:00–21:00.
+
+Sửa giờ trip hoặc sự kiện, kiểm tra và lưu, rồi tải bảng thời gian mới. Nếu trip được sửa ở tab khác, panel yêu cầu tải lại bản đã lưu. Các khoảng chưa xếp hoạt động chưa trừ bữa ăn/nghỉ/di chuyển. Không cần cấu hình thêm provider hoặc Supabase.

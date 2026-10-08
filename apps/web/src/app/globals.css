@@ -512,3 +512,39 @@ button:disabled {
 .fixed-event legend {
   padding: 0 0.4rem;
 }
+
+.availability {
+  margin-top: 2rem;
+}
+.availability-days {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.time-blocks {
+  padding: 0;
+  list-style: none;
+}
+.time-block {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  padding: 0.7rem;
+  margin: 0.4rem 0;
+  border-left: 4px solid var(--line);
+  border-radius: 4px;
+}
+.time-block span {
+  min-width: 125px;
+}
+.time-block.available {
+  border-color: var(--green);
+  background: #eef5e9;
+}
+.time-block.fixed {
+  border-color: #b77e28;
+  background: #fff4dc;
+}
+.time-block.outside_activity_hours {
+  color: var(--muted);
+}

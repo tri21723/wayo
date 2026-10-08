@@ -96,3 +96,9 @@ export const getRecommendations = (id: string) =>
   request<Recommendations>(
     `/api/trips/${encodeURIComponent(id)}/recommendations`,
   );
+
+export type TripAvailability = components["schemas"]["TripAvailability"];
+export const getAvailability = (id: string) =>
+  request<TripAvailability>(
+    `/api/trips/${encodeURIComponent(id)}/availability`,
+  );

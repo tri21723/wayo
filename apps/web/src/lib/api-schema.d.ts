@@ -116,6 +116,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/trips/{trip_id}/availability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Availability */
+        get: operations["getAvailability"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -137,6 +154,15 @@ export interface components {
             message: string;
             /** Details */
             details?: components["schemas"]["ErrorDetail"][];
+        };
+        /** AvailableDay */
+        AvailableDay: {
+            /** Date */
+            date: string;
+            /** Blocks */
+            blocks: components["schemas"]["TimeBlock"][];
+            /** Available Minutes */
+            available_minutes: number;
         };
         /** Budget */
         Budget: {
@@ -199,6 +225,11 @@ export interface components {
              * Format: date-time
              */
             ends_at: string;
+        };
+        /** HTTPValidationError */
+        HTTPValidationError: {
+            /** Detail */
+            detail?: components["schemas"]["ValidationError"][];
         };
         /** Health */
         Health: {
@@ -429,6 +460,37 @@ export interface components {
             profile_revision: number;
             answers: components["schemas"]["TasteAnswers"];
         };
+        /** TimeBlock */
+        TimeBlock: {
+            /**
+             * Starts At
+             * Format: date-time
+             */
+            starts_at: string;
+            /**
+             * Ends At
+             * Format: date-time
+             */
+            ends_at: string;
+            /** Label */
+            label: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "fixed" | "available" | "outside_activity_hours";
+            /** Minutes */
+            minutes: number;
+        };
+        /** TripAvailability */
+        TripAvailability: {
+            /** Trip Revision */
+            trip_revision: number;
+            /** Days */
+            days: components["schemas"]["AvailableDay"][];
+            /** Notices */
+            notices: components["schemas"]["InputNotice"][];
+        };
         /** TripCreate */
         TripCreate: {
             /**
@@ -539,6 +601,19 @@ export interface components {
             /** Notices */
             notices: components["schemas"]["InputNotice"][];
             trip: components["schemas"]["TripRequest"];
+        };
+        /** ValidationError */
+        ValidationError: {
+            /** Location */
+            loc: (string | number)[];
+            /** Message */
+            msg: string;
+            /** Error Type */
+            type: string;
+            /** Input */
+            input?: unknown;
+            /** Context */
+            ctx?: Record<string, never>;
         };
     };
     responses: never;
@@ -1116,6 +1191,64 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    getAvailability: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                trip_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TripAvailability"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
             /** @description Service Unavailable */

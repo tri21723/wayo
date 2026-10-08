@@ -111,3 +111,14 @@ Kiểm chứng snapshot hoàn tất ngày 2026-10-08: 70 test API đã qua trên
 TASTE-04 vẫn chưa hoàn tất toàn bộ acceptance. Không thêm migration, provider hoặc biến môi trường. Tọa độ nhập tay chỉ kiểm tra miền hợp lệ; chưa xác minh khớp địa chỉ hay nằm trong vùng phục vụ. Giờ sự kiện được API kiểm tra nằm trong trip, kết thúc sau bắt đầu và không chồng lấn.
 
 Kiểm chứng thiết lập chuyến đi: 50 test API validation/storage qua trên SQLite tạm; 7/7 browser flows qua trên production build, bao gồm giữ nguyên timestamp có timezone/độ chính xác khi không sửa. Lint, typecheck, format, Ruff và build đạt. Browser tests mock Auth/API; cần nghiệm thu bằng tài khoản thật.
+
+## Bảng thời gian theo ngày (2026-10-08)
+
+- [x] API owner-scoped tính block fixed/available/outside_activity_hours từ trip đã lưu.
+- [x] Giới hạn theo giờ đến/về, timezone Việt Nam, tách booking qua đêm và giữ ngày về đúng nửa đêm.
+- [x] UI xem từng ngày, sự kiện cố định, số phút còn lại; retry và từ chối revision cũ.
+- [ ] Thời gian ăn/nghỉ, buffer, travel matrix, opening-hour validation và phân bổ POI.
+
+Khung tham khảo 09:00–21:00; khoảng trống chưa đảm bảo khả thi ghé thăm địa điểm. Không tạo itinerary/version hay cần migration. PLAN-03/04 vẫn chưa hoàn tất. Chi tiết: [ADR 0006](decisions/0006-daily-availability.md).
+
+Kiểm chứng bảng thời gian: 6 test API mới qua trên SQLite tạm; 8/8 browser flows qua trên production build. Ruff, lint, typecheck, format và build đạt. Browser tests dùng Auth/API mock; còn nghiệm thu với tài khoản Supabase thật.

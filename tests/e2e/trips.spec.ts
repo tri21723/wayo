@@ -691,3 +691,110 @@ test("anchor and fixed events persist, retain remaining rows after removal and c
   ).not.toBeChecked();
   await expect(page.getByText("Chưa có sự kiện cố định.")).toBeVisible();
 });
+
+test("daily availability shows fixed bookings and rejects stale results", async ({
+  page,
+}) => {
+  await mockAuth(page);
+  let mode: "ready" | "stale" | "error" = "ready";
+  const trip = {
+    id: tripId,
+    title: "Availability fixture",
+    revision: 1,
+    created_at: "2026-10-01T00:00:00Z",
+    updated_at: "2026-10-01T00:00:00Z",
+    trip: {
+      origin: "TP.HCM",
+      arrival_at: "2026-11-06T12:00:00+07:00",
+      departure_at: "2026-11-08T17:00:00+07:00",
+      people_count: 2,
+      group_type: "couple",
+      budget: { amount_vnd: 4000000, scope: "group", mode: "soft" },
+      preferences: [],
+      exclusions: [],
+      fixed_events: [],
+    },
+  };
+  await page.route("**/api/trips**", async (route) => {
+    const path = new URL(route.request().url()).pathname;
+    if (path.endsWith("/availability")) {
+      expect(route.request().headers().authorization).toContain("Bearer ");
+      if (mode === "error")
+        return route.fulfill({
+          status: 503,
+          json: {
+            code: "UNAVAILABLE",
+            message: "Chưa tải được bảng thời gian thử nghiệm.",
+            details: [],
+          },
+        });
+      return route.fulfill({
+        json: {
+          trip_revision: mode === "stale" ? 2 : 1,
+          notices: [
+            { code: "HOURS", message: "Giờ hoạt động tham khảo 09:00–21:00." },
+          ],
+          days: [
+            {
+              date: "2026-11-07",
+              available_minutes: 60,
+              blocks: [
+                {
+                  starts_at: "2026-11-07T09:00:00+07:00",
+                  ends_at: "2026-11-07T10:00:00+07:00",
+                  kind: "available",
+                  label: "Thời gian chưa xếp hoạt động",
+                  minutes: 60,
+                },
+                {
+                  starts_at: "2026-11-07T10:00:00+07:00",
+                  ends_at: "2026-11-07T11:00:00+07:00",
+                  kind: "fixed",
+                  label: "Vé tham quan đã đặt",
+                  minutes: 60,
+                },
+              ],
+            },
+            { date: "2026-11-08", available_minutes: 0, blocks: [] },
+          ],
+        },
+      });
+    }
+    return route.fulfill({
+      json: path.endsWith(tripId)
+        ? trip
+        : { items: [trip], total: 1, offset: 0, limit: 20 },
+    });
+  });
+  await signIn(page);
+  await page.getByRole("link", { name: "Availability fixture" }).click();
+  const load = page.getByRole("button", { name: "Xem thời gian theo ngày" });
+  await load.click();
+  await expect(
+    page.getByRole("heading", { name: "Ngày 07/11/2026" }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Vé tham quan đã đặt", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Còn 60 phút trong giờ hoạt động tham khảo."),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Không có khoảng thời gian trong ngày này."),
+  ).toBeVisible();
+  mode = "stale";
+  await load.click();
+  await expect(
+    page.getByText(
+      "Chuyến đi đã thay đổi. Hãy tải lại bản đã lưu trước khi xem thời gian.",
+    ),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Vé tham quan đã đặt", { exact: true }),
+  ).toHaveCount(0);
+  mode = "error";
+  await load.click();
+  await expect(
+    page.getByText("Chưa tải được bảng thời gian thử nghiệm."),
+  ).toBeVisible();
+});

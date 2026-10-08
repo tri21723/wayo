@@ -4,7 +4,7 @@ AI travel planner cá nhân hóa cho du lịch tự túc Việt Nam, bắt đầ
 
 ## Trạng thái hiện tại
 
-Next.js + FastAPI có form trip, Supabase Auth, lưu/sửa sở thích tại `/profile`, lưu/đọc/sửa/xóa bản nháp bằng PostgreSQL và kiểm tra quyền sở hữu. Đã có catalog/importer và gợi ý địa điểm từ trip đã lưu; chưa có POI thật, routing hoặc AI planner. Phần kiểm tra đầu vào chạy không cần API key; đăng nhập/lưu trip cần cấu hình dịch vụ.
+Next.js + FastAPI có form trip, Supabase Auth, lưu/sửa sở thích tại `/profile`, lưu/đọc/sửa/xóa bản nháp bằng PostgreSQL và kiểm tra quyền sở hữu. Đã có bảng thời gian theo ngày, catalog/importer và gợi ý địa điểm từ trip đã lưu; chưa có POI thật, routing hoặc AI planner. Phần kiểm tra đầu vào chạy không cần API key; đăng nhập/lưu trip cần cấu hình dịch vụ.
 
 - [Kế hoạch và checklist](docs/WAYO_IMPLEMENTATION_PLAN.md)
 - [Tiến độ sprint 1](docs/SPRINT_01_STATUS.md)
